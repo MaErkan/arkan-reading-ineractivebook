@@ -1,0 +1,79 @@
+/* Arkan reading workspace: source content remains in index.html. */
+:root{--ux-radius:20px;--ux-shadow:0 12px 36px -24px rgba(5,57,63,.35)}
+html{scroll-behavior:smooth;scroll-padding-top:150px}
+body{overflow-wrap:break-word}
+.bar{box-shadow:0 1px 0 var(--line),0 8px 30px -24px #12343a}
+.bar-in{max-width:1440px;min-height:80px;gap:10px;padding-inline:28px}
+.bar .brand b{font-family:var(--ui);font-size:21px;font-weight:800;line-height:1.5}
+.bar .brand small{font-size:12px;opacity:.85}
+.bar .brand .mark{border:0;box-shadow:none;transform:none;background:transparent}
+.bar .tbtn{min-height:42px;border:1px solid #ffffff40;border-radius:12px;padding:8px 12px}
+.bar .meter .track{height:7px;border:0;width:90px}
+.wrap{max-width:1440px;grid-template-columns:280px minmax(0,1fr);gap:32px;padding:28px 28px 100px}
+#toc{border:1px solid var(--line);border-radius:20px;box-shadow:var(--ux-shadow);padding:16px 12px;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+.toc a{min-height:48px;border-radius:12px;margin-block:3px;padding:10px;font-size:14px}
+.toc a.on{background:var(--teal-soft);color:var(--teal-deep);box-shadow:inset -3px 0 var(--teal)}
+.toc a.on .st{background:var(--card);color:var(--teal-deep)}
+.toc .n{border-radius:9px;font-family:var(--ui);font-weight:800;font-size:13px}
+.toc-part{padding:20px 10px 8px;font-size:17px}.toc-part::before{width:6px;height:6px;box-shadow:none}
+.ux-search{position:sticky;top:-16px;z-index:2;background:var(--card);padding:4px 0 12px;border-bottom:1px solid var(--line);margin-bottom:10px}
+.ux-search label{font-size:12px;font-weight:800;color:var(--muted);display:block;margin:0 4px 6px}
+.ux-search input{width:100%;min-height:44px;border:1px solid var(--line);border-radius:11px;padding:10px 12px;background:var(--paper);color:var(--ink);font:inherit;direction:rtl}
+.ux-search p{font-size:12px;color:var(--muted);margin:7px 5px 0}
+.ux-empty{padding:20px 8px;color:var(--muted);font-size:14px}
+.ux-tools{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:20px;padding:12px 16px;border:1px solid var(--line);border-radius:14px;background:var(--card)}
+.ux-tools .ux-location{flex:1;color:var(--muted);font-size:13px;min-width:120px}
+.ux-tools button,.ux-resume{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:9px 14px;font-family:var(--ui);font-size:13px;font-weight:700;min-height:42px}
+.ux-tools button:hover,.ux-resume:hover{border-color:var(--teal);background:var(--teal-soft)}
+.ux-tools button[aria-pressed="true"]{background:var(--teal-soft);color:var(--teal-deep);border-color:var(--teal)}
+.card,.rules,.textbox,.part{border-width:1px;border-radius:var(--ux-radius);box-shadow:var(--ux-shadow)}
+.card{padding:28px}.items{gap:24px}.item{scroll-margin-top:155px}
+.badge,.ex-tag,h2.pill,.inum{transform:none;box-shadow:none;border-width:1px}
+.badge{border-radius:18px;background:var(--teal-soft)}
+.badge span{color:var(--teal-deep)}
+.shead{padding:6px 0 20px;border-bottom:1px solid var(--line)}
+h1.stitle{font-size:clamp(28px,3vw,39px)}
+.qt{line-height:2}.opts{gap:12px}.opt{border-width:1px;border-radius:14px;min-height:54px;padding:13px 16px}
+textarea{border-style:solid;border-width:1px;border-radius:14px;min-height:100px;padding:14px 16px}
+textarea:focus-visible{outline:3px solid color-mix(in srgb,var(--teal) 30%,transparent);outline-offset:2px}
+.home.hero{border:1px solid var(--line);border-radius:26px;overflow:hidden;box-shadow:var(--ux-shadow)}
+.home .hero-body{position:relative}.home h1{line-height:1.55;text-wrap:balance}
+.home .by{font-family:var(--ui);font-size:14px;color:var(--muted)}
+.home .steps{gap:14px}.home .steps>div{border:1px solid var(--line);border-radius:14px;padding:16px;background:var(--card);box-shadow:none}
+.home .steps b{font-family:var(--ui);font-size:16px;font-weight:800}
+.home .start{border-radius:13px;box-shadow:none;min-height:52px;font-family:var(--ui);font-size:17px;font-weight:800}
+.ux-resume{margin:16px 0;display:block;width:100%;text-align:right;background:var(--teal-soft);color:var(--teal-deep)}
+.parts{gap:20px}.part{padding:24px}.part h3{margin-top:0}.chips{gap:10px}
+.chip{border:1px solid var(--line);border-radius:12px;min-height:48px;box-shadow:none}
+.ux-focus .wrap{grid-template-columns:minmax(0,880px);justify-content:center}.ux-focus #toc{display:none}
+.ux-skip{position:fixed;top:-100px;right:20px;z-index:10001;background:var(--card);color:var(--ink);padding:12px 20px;border-radius:10px}.ux-skip:focus{top:12px}
+html #lk .bx{width:min(460px,calc(100vw - 32px));padding:0 32px 28px;border-radius:28px;outline:none;box-shadow:0 24px 90px #062f3a55}
+html #lk h1{font-size:30px;line-height:1.7;margin:16px 0 8px}
+html #lk input{min-height:58px;border-radius:13px;font-size:22px;letter-spacing:3px}
+html #lk button{min-height:54px;border-radius:13px;font-family:var(--ui);font-size:19px;box-shadow:none}
+.ux-lock-meta{text-align:center;font:500 13px/1.8 var(--ui);color:var(--muted);margin:14px 0 0}
+.ux-lock-label{display:block;text-align:right;font:700 14px var(--ui);color:var(--ink);margin:18px 0 8px}
+@media(min-width:1050px){.home.hero{padding:40px}.home .hero-art{max-width:270px}.home .hero-body p{max-width:680px;margin-inline:auto}}
+@media(max-width:1050px){.bar-in{padding-inline:16px;flex-wrap:wrap}.wrap{padding-inline:18px;gap:20px}.bar .brand b{font-size:18px}.bar .meter{display:none}}
+@media(max-width:800px){.wrap,.ux-focus .wrap{display:block;padding:18px 14px 96px}.bar-in{min-height:66px;padding:10px 12px;gap:7px}.bar .brand{flex:1}.bar .brand small{font-size:10px}.bar .brand b{font-size:16px}.bar .tbtn{min-height:40px;padding:7px 10px}.bar #aiBtn .lbl,.bar #notesBtn .lbl{display:none}.bar #fsDown,.bar #fsUp{min-width:40px}.card{padding:20px 16px}.ux-tools{padding:10px;gap:7px}.ux-tools button{padding:8px 10px}.ux-tools .ux-location{flex-basis:100%;font-size:12px}.home .steps{grid-template-columns:1fr}.home.hero{padding:24px 16px}.part{padding:20px 16px}#toc{padding-top:16px}.ux-focus .menu-btn{display:none}.field{grid-template-columns:1fr}.field label{padding-top:0}.poem{column-gap:14px}.ux-search{top:0}.ux-resume{font-size:13px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{transition:none!important;animation:none!important}}
+
+/* Larger Arabic reading type; the existing A+/A- controls still scale it. */
+:root{--reading-size:calc(var(--fs,21px) + 4px)}
+body{font-size:17px}
+#main .tx,#main .ptext,#main .intro,#main .qt,#main .dl,
+#main .ans,#main .textbox p{font-size:var(--reading-size);line-height:2.1}
+#main .opt,#main textarea,#main .rules .k,#main .rules .v,
+#main .how li{font-size:calc(var(--reading-size) - 1px);line-height:2}
+#main .poem,#main .ayah,#main .hadith{font-size:calc(var(--reading-size) + 1px);line-height:2.2}
+#main .field label{font-size:calc(var(--reading-size) - 2px);line-height:1.9}
+#main .home p,#main .steps>div{font-size:19px;line-height:1.9}
+.toc a{font-size:17px;line-height:1.7}
+.toc-part{font-size:20px;line-height:1.8}
+.ux-tools button,.ux-resume{font-size:16px}
+.ux-tools .ux-location,.ux-search label,.ux-search p{font-size:15px}
+@media(max-width:800px){
+ #main .poem{column-gap:12px}
+ .toc a{font-size:17px}
+ .ux-tools .ux-location,.ux-resume{font-size:15px}
+}

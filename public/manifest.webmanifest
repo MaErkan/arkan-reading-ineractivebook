@@ -1,0 +1,40 @@
+{
+  "name": "أركان التفاعلي في القراءة",
+  "short_name": "أركان القراءة",
+  "description": "أركان التفاعلي في القراءة – تدريبات القراءة للصف الثاني عشر",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "./?source=pwa",
+  "scope": "./",
+  "id": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#F7F3EA",
+  "theme_color": "#0F6670",
+  "icons": [
+    {
+      "src": "icons/icon-v3-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-v3-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/maskable-v3-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/maskable-v3-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

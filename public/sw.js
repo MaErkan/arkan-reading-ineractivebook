@@ -1,6 +1,6 @@
 // Service worker – أركان التفاعلي
-const VERSION = 'arkan-v25-icon';
-const CORE = ['./install.js', './icons/favicon-v5.ico', './icons/maskable-v5-192.png', './experience.css?v=20261023', './experience.js?v=20261023', './', './index.html', './tutor-ui.js', './teacher-review.js?v=1', './manifest.webmanifest',
+const VERSION = 'arkan-v26-protect';
+const CORE = ['./install.js', './arkan-protect.js', './icons/favicon-v5.ico', './icons/maskable-v5-192.png', './experience.css?v=20261023', './experience.js?v=20261023', './', './index.html', './tutor-ui.js', './teacher-review.js?v=1', './manifest.webmanifest',
   './icons/icon-v5-192.png', './icons/icon-v5-512.png', './icons/maskable-v5-512.png', './icons/apple-touch-icon-v5.png', './icons/favicon-v5-32.png', './img/logo-scene.jpg', './img/arch-light.jpg', './img/mosque-blue.jpg'];
 
 self.addEventListener('install', e => {
@@ -27,6 +27,23 @@ self.addEventListener('fetch', e => {
         caches.open(VERSION).then(c => c.put('./index.html', copy));
         return res;
       }).catch(() => caches.match('./index.html'))
+    );
+    return;
+  }
+
+  // ملفات الحماية والتثبيت: من المخزن دائماً حتى بدون إنترنت (مع تجاهل أي query)
+  if (url.origin === location.origin && (url.pathname === '/arkan-protect.js' || url.pathname === '/install.js')) {
+    e.respondWith(
+      caches.match(req, { ignoreSearch: true }).then(hit => {
+        const net = fetch(req).then(res => {
+          if (res && res.ok) {
+            const copy = res.clone();
+            caches.open(VERSION).then(c => c.put(url.pathname, copy));
+          }
+          return res;
+        }).catch(() => hit);
+        return hit || net;
+      })
     );
     return;
   }

@@ -1,3 +1,12 @@
+/* load content protection */
+(function loadProtect(){
+  if (document.querySelector('script[data-arkan-protect]')) return;
+  var s = document.createElement('script');
+  s.src = '/arkan-protect.js';
+  s.defer = true;
+  s.setAttribute('data-arkan-protect','1');
+  (document.head || document.documentElement).appendChild(s);
+})();
 /* Browser installation stays under the reader's control. */
 (() => {
   'use strict';

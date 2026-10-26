@@ -57,6 +57,23 @@ export default async (req) => {
     const nm = clip(p.name || '', 60).replace(/[\u0000-\u001f<>]/g, '').trim();
     let queued = false, sent = false;
     try { await st.set('mailq/' + sha(email).slice(0, 32), { email, name: nm, did, ts: now, tries: 0 }); queued = true; } catch (e) { console.error('mailq', e.message); }
+    // أيقظ روتين إرسال جيميل فورًا (ويب هوك) بدل انتظار الكرون
+    if (queued) {
+      const wake = process.env.MAILQ_WAKE_URL;
+      if (wake) {
+        try {
+          const wh = { 'content-type': 'application/json', 'user-agent': 'arkan-mailq-wake' };
+          if (process.env.MAILQ_WAKE_HEADER) {
+            const h = process.env.MAILQ_WAKE_HEADER;
+            const i = h.indexOf(':');
+            if (i > 0) wh[h.slice(0, i).trim()] = h.slice(i + 1).trim();
+          } else if (process.env.MAILQ_WAKE_KEY) {
+            wh['authorization'] = 'Bearer ' + process.env.MAILQ_WAKE_KEY;
+          }
+          await fetch(wake, { method: 'POST', headers: wh, body: JSON.stringify({ source: 'arkan-mailq', email, ts: now }) });
+        } catch (e) { console.error('mailq wake', e.message); }
+      }
+    }
     const ac = process.env.ACTIVATION_CODE;
     if (mailMode() && ac) { try { await send(email, ac, true); sent = true; } catch (e) { console.error('act send', e.message); } }
     if (!queued && !sent) return json({ error: 'send_failed' }, 502);

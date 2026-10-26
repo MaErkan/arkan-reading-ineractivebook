@@ -22,6 +22,9 @@ input,textarea{font:inherit;color:inherit;background:var(--card);border:1.5px so
 <div id="app" hidden>
  <div class="tabs"><button id="tp">بانتظار القرار</button><button class="ghost" id="ta">كل الطلبات</button><button class="ghost" id="rf">↻ تحديث</button></div>
  <div id="list"></div>
+ <div class="card" id="gen"><div class="lbl">🔑 توليد كلمة مرور عشوائية للكتاب</div>
+  <p style="margin:4px 0">اضغط لتوليد كود جديد. لتفعيله يجب إعادة تشفير الكتاب بهذا الكود ونشره (أرسله لمساعدك ليقوم بذلك)، بعدها يُطلب الكود الجديد من كل الطلاب.</p>
+  <div class="row"><button id="gb">توليد كود</button><button class="ghost" id="gc">نسخ</button></div><pre id="gv" style="font-size:22px;letter-spacing:3px;direction:ltr;text-align:center">—</pre></div>
 </div></main>
 <script>
 const $=id=>document.getElementById(id); let CODE=sessionStorage.getItem('tc')||'', MODE='pending';
@@ -54,5 +57,7 @@ $('ta').onclick=()=>{ MODE='all'; $('ta').className=''; $('tp').className='ghost
 $('rf').onclick=load;
 $('list').onclick=async e=>{ const b=e.target.closest('[data-d]'); if(!b) return; const c=b.closest('.card'); b.disabled=true;
   const {r}=await api('POST','/api/teacher',{key:c.dataset.k,decision:b.dataset.d,note:c.querySelector('[data-n]').value}); if(r.ok) load(); else { b.disabled=false; alert('تعذّر الحفظ'); } };
+$('gb').onclick=()=>{ const A='ABCDEFGHJKMNPQRSTUVWXYZ23456789', r=crypto.getRandomValues(new Uint32Array(8)); $('gv').textContent=Array.from(r,x=>A[x%A.length]).join(''); };
+$('gc').onclick=()=>{ const v=$('gv').textContent; if(v&&v!=='—') navigator.clipboard&&navigator.clipboard.writeText(v); };
 if(CODE){ show(true); load(); }
 </script></body></html>

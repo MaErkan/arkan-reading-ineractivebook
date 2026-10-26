@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <title>أركان — أيقونة الكتاب وحرف الألف</title>
+  <defs>
+    <linearGradient id="bg" x2="1" y2="1"><stop stop-color="#107D82"/><stop offset="1" stop-color="#083F48"/></linearGradient>
+    <linearGradient id="gold" x2="0" y2="1"><stop stop-color="#FFE29A"/><stop offset="1" stop-color="#E5B64F"/></linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="#0B626B"/>
+  <path d="M112 347V221C112 154 187 105 256 69c69 36 144 85 144 152v126" fill="none" stroke="#E5B64F" stroke-width="9"/>
+  <path d="M129 347V223c0-55 65-101 127-134 62 33 127 79 127 134v124" fill="none" stroke="#FFFFFF" stroke-opacity=".13" stroke-width="3"/>
+  <!-- A geometric Arabic alif with hamza remains clear at small sizes. -->
+  <path d="M239 211h34v102h-34z" fill="#F5D07A"/>
+  <path d="M273 158c-7-8-17-9-24-3-8 7-6 17 3 22l-18 10h42v-13h-18c-9-2-10-7-6-10 3-3 7-2 10 2z" fill="#FFE29A"/>
+  <!-- Open pages join at the central spine. -->
+  <path d="M145 300c39-3 76 9 111 31 35-22 72-34 111-31v72c-39-3-76 9-111 30-35-21-72-33-111-30z" fill="#FFF5DC"/>
+  <path d="M256 331v71" fill="none" stroke="#D5B66E" stroke-width="5"/>
+  <path d="M164 321c23 1 44 8 65 19m-65 2c23 1 44 8 65 19m119-40c-23 1-44 8-65 19m65 2c-23 1-44 8-65 19" fill="none" stroke="#0D6870" stroke-width="5" stroke-linecap="round"/>
+  <path d="M145 387c39-3 76 9 111 30 35-21 72-33 111-30" fill="none" stroke="#E5B64F" stroke-width="7" stroke-linecap="round"/>
+</svg>

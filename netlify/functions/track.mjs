@@ -18,7 +18,7 @@ export default async (req) => {
   const st = await anStore(); const key = 'u/' + did;
   const now = Date.now();
   const u = (await st.get(key)) || { did, first: now, sessions: 0, unlocks: 0, fails: 0, opens: {}, right: 0, wrong: 0, errs: [], tests: [], recent: [], idle: 0 };
-  u.name = name; const email = clip(p.email, 80).trim().toLowerCase(); if (/^[^\s@<>]+@[^\s@<>]+\.[a-z]{2,}$/i.test(email)) u.email = email; if (p.phone) u.phone = clip(p.phone, 25).replace(/[^\d+ ]/g, ''); u.ua = clip(req.headers.get('user-agent'), 120); u.code = code;
+  u.name = name; const email = clip(p.email, 80).trim().toLowerCase(); if (/^[^\s@<>]+@[^\s@<>]+\.[a-z]{2,}$/i.test(email)) u.email = email; u.verified = !!(u.email && u.verifiedEmail === u.email); if (p.phone) u.phone = clip(p.phone, 25).replace(/[^\d+ ]/g, ''); u.ua = clip(req.headers.get('user-agent'), 120); u.code = code;
   for (const e of evs) {
     const ts = Math.min(+e.ts || now, now); const sec = clip(e.sec, 90), item = clip(e.item, 10), q = clip(e.q, 140);
     u.last = Math.max(u.last || 0, ts);

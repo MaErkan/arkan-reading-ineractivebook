@@ -11,10 +11,12 @@
   var nudged = false;
   function nudge() {
     if (nudged) return; nudged = true;
-    var b = document.createElement('a'); b.href = 'https://t.me/smart_arkanBot'; b.target = '_blank'; b.rel = 'noopener';
-    b.textContent = '💬 ناقش أغلاطك مع البوت: ابعت إيميلك لـ @smart_arkanBot ثم اكتب «أغلاطي»';
-    b.style.cssText = 'position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:2147483640;background:#0B7C82;color:#fff;padding:10px 14px;border-radius:12px;font-size:14px;direction:rtl;text-decoration:none;box-shadow:0 4px 16px rgba(0,0,0,.25);max-width:92%';
-    document.body.appendChild(b); setTimeout(function () { b.remove(); }, 12000);
+    var b = document.createElement('div'); b.setAttribute('role', 'status');
+    b.textContent = '💬 ناقش أغلاطك مع المعلم الذكي من الزر 🎓';
+    b.style.cssText = 'position:fixed;bottom:84px;left:50%;transform:translateX(-50%);z-index:2147483640;background:#0B7C82;color:#fff;padding:10px 14px;border-radius:12px;font-size:14px;direction:rtl;box-shadow:0 4px 16px rgba(0,0,0,.25);max-width:92%;cursor:pointer';
+    function openT() { var t = document.getElementById('arkanTutor'), k = document.getElementById('arkanTutorBtn'); if (t && t.hidden && k) k.click(); else if (t) t.hidden = false; b.remove(); }
+    b.onclick = openT;
+    document.body.appendChild(b); setTimeout(function () { b.remove(); }, 10000);
   }
   function ev(t, o) { var e = o || {}; if (e.ok === false || (t === 'test_done' && e.pc < 70)) setTimeout(nudge, 1500); e.t = t; e.ts = Date.now(); Q.push(e); if (Q.length > 400) Q.splice(0, Q.length - 400); s(QK, JSON.stringify(Q)); }
   var busy = false;

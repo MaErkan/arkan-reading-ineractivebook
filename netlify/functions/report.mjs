@@ -11,7 +11,9 @@ export default async (req) => {
   const okEnv = secret && safeEq(k, secret);
   const okHash = k.length >= 20 && safeEq(createHash('sha256').update(k).digest('hex'), KEY_SHA256);
   if (!okEnv && !okHash) return json({ error: 'forbidden' }, 403);
-  const st = await anStore(); const keys = (await st.keys()).filter((x) => x.startsWith('u/'));
+  const st = await anStore();
+  if (req.method === 'DELETE') { const d = new URL(req.url).searchParams.get('did') || ''; if (!/^[\w-]{3,40}$/.test(d)) return json({ error: 'bad' }, 400); await st.del('u/' + d); return json({ ok: true }); }
+  const keys = (await st.keys()).filter((x) => x.startsWith('u/'));
   const users = [];
   for (let i = 0; i < keys.length; i += 20) users.push(...(await Promise.all(keys.slice(i, i + 20).map((x) => st.get(x)))).filter(Boolean));
   return json({ users, at: Date.now() });

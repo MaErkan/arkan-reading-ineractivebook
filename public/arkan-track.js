@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   if (window.__arkanTrack) return; window.__arkanTrack = true;
-  var UK = 'arkan_user', QK = 'arkan-trackq', DK = 'arkan-did', CK = 'arkan-unlock-v1';
+  var UK = 'arkan_user_v2', QK = 'arkan-trackq', DK = 'arkan-did', CK = 'arkan-unlock-v1';
   function g(k) { try { return localStorage.getItem(k); } catch (x) { return null; } }
   function s(k, v) { try { localStorage.setItem(k, v); } catch (x) {} }
   function user() { try { return JSON.parse(g(UK) || '{}') || {}; } catch (x) { return {}; } }
@@ -61,12 +61,66 @@
       if (!/^[^\s@<>]+@[^\s@<>]+\.[a-z]{2,}$/i.test(m)) { document.getElementById('arkRE').textContent = 'اكتب إيميلك الصحيح (مثال: name@gmail.com)'; return; }
       var p = document.getElementById('arkRP').value.replace(/[^\d+]/g, '');
       s(UK, JSON.stringify({ name: n, email: m, phone: p })); d.remove();
-      ev('register'); flush(false);
+      ev('register'); flush(false); ensureVerified();
       try { window.dispatchEvent(new StorageEvent('storage', { key: UK })); } catch (x) {}
     });
     if (cu.name) document.getElementById('arkRN').value = cu.name;
     if (cu.phone) document.getElementById('arkRP').value = cu.phone;
     setTimeout(function () { var i = document.getElementById(cu.name ? 'arkRM' : 'arkRN'); if (i) i.focus(); }, 50);
+  }
+
+
+  // ===== تفعيل الإيميل بكود (إلزامي لما يكون مزوّد الإيميل مفعّل على السيرفر) =====
+  var vBusy = false;
+  function ensureVerified() {
+    var u = user(); if (!u.email || u.vf === u.email || vBusy || document.getElementById('arkOtp')) return;
+    vBusy = true;
+    fetch('/api/verify', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (j) {
+      if (!j || !j.enabled) { vBusy = false; return; }
+      (function wait() { if (g(CK)) { vBusy = false; showOtp(); } else setTimeout(wait, 1500); })();
+    }).catch(function () { vBusy = false; });
+  }
+  function post(o) {
+    var u = user(); o.email = u.email; o.did = did; o.code = g(CK); o.name = u.name;
+    return fetch('/api/verify', { method: 'POST', headers: { 'content-type': 'text/plain' }, body: JSON.stringify(o) }).then(function (r) { return r.json().catch(function () { return {}; }); });
+  }
+  function showOtp() {
+    var u = user(); if (!u.email || u.vf === u.email || document.getElementById('arkOtp')) return;
+    if (!document.getElementById('arkOtpSt')) { var st = document.createElement('style'); st.id = 'arkOtpSt';
+      st.textContent = '#arkOtp{position:fixed;inset:0;z-index:2147483646;background:rgba(10,40,42,.92);display:flex;align-items:center;justify-content:center;padding:18px}#arkOtp form{background:#fff;border-radius:18px;max-width:380px;width:100%;padding:22px;direction:rtl;text-align:right}#arkOtp h3{margin:0 0 6px;color:#0B7C82}#arkOtp p{margin:0 0 12px;color:#4B6A6D;font-size:14px}#arkOtp input{width:100%;box-sizing:border-box;padding:12px;margin:0 0 10px;border:1.5px solid #cfe0e0;border-radius:10px;font-size:24px;letter-spacing:8px;text-align:center;user-select:text;-webkit-user-select:text}#arkOtp button{width:100%;padding:12px;border:0;border-radius:10px;background:#0B7C82;color:#fff;font-size:17px;font-weight:700;margin-bottom:8px}#arkOtp .l{display:flex;justify-content:space-between;font-size:13px}#arkOtp .l a{color:#0B7C82;cursor:pointer}#arkOtp .e{color:#b3261e;font-size:13px;min-height:18px}';
+      document.head.appendChild(st); }
+    var d = document.createElement('div'); d.id = 'arkOtp';
+    d.innerHTML = '<form><h3>فعّل إيميلك</h3><p>بعتنا كود من 6 أرقام على <b dir="ltr"></b> — اكتبه هنا عشان يفتح الكتاب. (شوف كمان الرسائل غير المرغوب فيها / Spam)</p>' +
+      '<input id="arkOI" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="------">' +
+      '<div class="e" id="arkOE"></div><button type="submit">تأكيد</button><div class="l"><a id="arkOR">إعادة إرسال الكود</a><a id="arkOC">تغيير الإيميل</a></div></form>';
+    d.querySelector('b').textContent = u.email;
+    document.body.appendChild(d);
+    var E = document.getElementById('arkOE'), R = document.getElementById('arkOR'), cd = 0, tm;
+    function cool(n) { cd = n; clearInterval(tm); tm = setInterval(function () { cd--; R.textContent = cd > 0 ? 'إعادة الإرسال بعد ' + cd + ' ث' : 'إعادة إرسال الكود'; if (cd <= 0) clearInterval(tm); }, 1000); }
+    function req() {
+      if (cd > 0) return; E.style.color = '#4B6A6D'; E.textContent = 'جاري إرسال الكود…';
+      post({ action: 'request' }).then(function (j) {
+        E.style.color = '';
+        if (j.ok) { E.style.color = '#0B7C82'; E.textContent = 'اتبعت الكود ✔'; cool(60); }
+        else if (j.enabled === false) { d.remove(); }
+        else if (j.error === 'cooldown') { E.textContent = ''; cool(j.wait || 60); }
+        else if (j.error === 'too_many') E.textContent = 'طلبات كتير — جرّب بعد ساعة';
+        else if (j.error === 'send_failed') E.textContent = 'ما قدرناش نبعت على الإيميل ده — اتأكد إنه صحيح أو غيّره';
+        else E.textContent = 'حصل خطأ، جرّب تاني';
+      }).catch(function () { E.textContent = 'مفيش اتصال بالإنترنت'; });
+    }
+    R.onclick = req;
+    document.getElementById('arkOC').onclick = function () { var x = user(); delete x.email; delete x.vf; s(UK, JSON.stringify(x)); d.remove(); askName(); };
+    d.querySelector('form').addEventListener('submit', function (e) {
+      e.preventDefault(); var c = document.getElementById('arkOI').value.replace(/[٠-٩]/g, function (x) { return '٠١٢٣٤٥٦٧٨٩'.indexOf(x); }).replace(/\D/g, '');
+      if (c.length !== 6) { E.textContent = 'الكود 6 أرقام'; return; }
+      post({ action: 'confirm', otp: c }).then(function (j) {
+        if (j.ok) { var x = user(); x.vf = x.email; s(UK, JSON.stringify(x)); d.remove(); flush(false); return; }
+        E.style.color = '';
+        E.textContent = j.error === 'wrong' ? 'الكود غلط' + (j.left != null ? ' (باقي ' + j.left + ' محاولات)' : '') : j.error === 'expired' ? 'الكود انتهى — اطلب كود جديد' : j.error === 'locked' ? 'محاولات كتير — اطلب كود جديد' : 'حصل خطأ، جرّب تاني';
+      }).catch(function () { E.textContent = 'مفيش اتصال بالإنترنت'; });
+    });
+    req(); setTimeout(function () { var i = document.getElementById('arkOI'); if (i) i.focus(); }, 50);
   }
 
   // ===== أحداث الاستخدام =====
@@ -109,7 +163,7 @@
   }, true);
 
   function init() {
-    askName();
+    askName(); ensureVerified();
     if (g('arkan-idle-locked')) { ev('idle_lock'); try { localStorage.removeItem('arkan-idle-locked'); } catch (x) {} }
     ev('session');
     var lk = document.getElementById('lk');

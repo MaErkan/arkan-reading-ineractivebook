@@ -30,7 +30,7 @@
   // اسم/بريد الطالب من localStorage — يُعامل كنص فقط (لا innerHTML) لمنع XSS
   function who() {
     try {
-      var u = JSON.parse(localStorage.getItem('arkan_user') || '{}') || {};
+      var u = JSON.parse(localStorage.getItem('arkan_user_v2') || '{}') || {};
       var n = typeof u.name === 'string' ? u.name : '';
       var e = typeof u.email === 'string' ? u.email : '';
       return (n + ' ' + e).replace(/[\u0000-\u001f\u007f]/g, '').slice(0, 120).trim();
@@ -121,7 +121,7 @@
       if (!document.getElementById('cover')) { var c = document.createElement('div'); c.id = 'cover'; document.body.appendChild(c); }
     }).observe(document.body, { childList: true });
     // تحديث العلامة عند تسجيل الدخول في تبويب آخر
-    window.addEventListener('storage', function (e) { if (e.key === 'arkan_user') watermark(); });
+    window.addEventListener('storage', function (e) { if (e.key === 'arkan_user_v2') watermark(); });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();

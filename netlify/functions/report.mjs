@@ -12,9 +12,14 @@ export default async (req) => {
   const okHash = k.length >= 20 && safeEq(createHash('sha256').update(k).digest('hex'), KEY_SHA256);
   if (!okEnv && !okHash) return json({ error: 'forbidden' }, 403);
   const st = await anStore();
-  if (req.method === 'DELETE') { const d = new URL(req.url).searchParams.get('did') || ''; if (!/^[\w-]{3,40}$/.test(d)) return json({ error: 'bad' }, 400); await st.del('u2/' + d); return json({ ok: true }); }
-  const keys = (await st.keys()).filter((x) => x.startsWith('u2/'));
+  if (req.method === 'DELETE') {
+    const q = new URL(req.url).searchParams.get('mailq');
+    if (q != null) { const id = q.replace(/^mailq\//, ''); if (!/^[a-f0-9]{8,64}$/.test(id)) return json({ error: 'bad' }, 400); await st.del('mailq/' + id); return json({ ok: true }); }
+    const d = new URL(req.url).searchParams.get('did') || ''; if (!/^[\w-]{3,40}$/.test(d)) return json({ error: 'bad' }, 400); await st.del('u2/' + d); return json({ ok: true }); }
+  const all = await st.keys(); const keys = all.filter((x) => x.startsWith('u2/'));
   const users = [];
   for (let i = 0; i < keys.length; i += 20) users.push(...(await Promise.all(keys.slice(i, i + 20).map((x) => st.get(x)))).filter(Boolean));
-  return json({ users, at: Date.now() });
+  const mk = all.filter((x) => x.startsWith('mailq/')); const mailq = [];
+  for (const x of mk) { const v = await st.get(x); if (v) mailq.push({ id: x.slice(6), email: v.email, name: v.name, did: v.did, ts: v.ts, tries: v.tries || 0 }); }
+  return json({ users, mailq, at: Date.now() });
 };

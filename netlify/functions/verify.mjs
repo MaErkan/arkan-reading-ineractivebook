@@ -16,11 +16,11 @@ export function mailMode() {
   if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) return 'smtp';
   return '';
 }
-async function send(to, code) {
+async function send(to, code, isAct) {
   const from = process.env.EMAIL_FROM || 'Arkan <onboarding@resend.dev>';
   const subject = 'كود تفعيل كتاب أركان: ' + code;
-  const text = `كود التفعيل الخاص بك هو: ${code}\nصالح لمدة 10 دقائق. لو ما طلبتش الكود تجاهل الرسالة.`;
-  const html = `<div dir="rtl" style="font-family:Tahoma,Arial;font-size:16px">كود تفعيل كتاب أركان:<h1 style="letter-spacing:6px;color:#0B7C82">${code}</h1>صالح لمدة 10 دقائق.</div>`;
+  const text = isAct ? `كود تفعيل كتاب أركان الخاص بك هو: ${code}\nاكتبه في شاشة «كود التفعيل» في الكتاب. لا تشاركه مع أحد.` : `كود التفعيل الخاص بك هو: ${code}\nصالح لمدة 10 دقائق. لو ما طلبتش الكود تجاهل الرسالة.`;
+  const html = `<div dir="rtl" style="font-family:Tahoma,Arial;font-size:16px">كود تفعيل كتاب أركان:<h1 style="letter-spacing:6px;color:#0B7C82">${code}</h1>${isAct ? 'اكتبه في شاشة «كود التفعيل» في الكتاب.' : 'صالح لمدة 10 دقائق.'}</div>`;
   const m = mailMode();
   if (m === 'resend') {
     const r = await fetch('https://api.resend.com/emails', { method: 'POST', headers: { authorization: 'Bearer ' + process.env.RESEND_API_KEY, 'content-type': 'application/json' }, body: JSON.stringify({ from, to: [to], subject, text, html }) });
@@ -53,10 +53,15 @@ export default async (req) => {
     o.sends = (o.sends || []).filter((t) => now - t < 3600_000);
     if (o.last && now - o.last < COOL) return json({ error: 'cooldown', wait: Math.ceil((COOL - (now - o.last)) / 1000) }, 429);
     if (o.sends.length >= MAX_SEND_H) return json({ error: 'too_many' }, 429);
-    const otp = String(randomInt(0, 1e6)).padStart(6, '0');
-    try { await send(email, otp); } catch (e) { console.error('otp send', e.message); return json({ error: 'send_failed' }, 502); }
-    Object.assign(o, { h: sha(otp + '|' + email + '|' + salt()), exp: now + TTL, tries: 0, last: now, did }); o.sends.push(now);
-    await st.set(key, o); return json({ ok: true, enabled: true });
+    // طابور إيميلات لبوت صاحب الكتاب (يبعت من Gmail) — بدون الكود نفسه
+    const nm = clip(p.name || '', 60).replace(/[\u0000-\u001f<>]/g, '').trim();
+    let queued = false, sent = false;
+    try { await st.set('mailq/' + sha(email).slice(0, 32), { email, name: nm, did, ts: now, tries: 0 }); queued = true; } catch (e) { console.error('mailq', e.message); }
+    const ac = process.env.ACTIVATION_CODE;
+    if (mailMode() && ac) { try { await send(email, ac, true); sent = true; } catch (e) { console.error('act send', e.message); } }
+    if (!queued && !sent) return json({ error: 'send_failed' }, 502);
+    o.last = now; o.did = did; o.sends.push(now);
+    await st.set(key, o); return json({ ok: true });
   }
   if (p.action === 'activate') {
     o.tries = (o.tries || 0); if (o.lockUntil && now < o.lockUntil) return json({ error: 'locked' }, 429);

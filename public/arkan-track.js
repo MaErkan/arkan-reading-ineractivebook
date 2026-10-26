@@ -87,20 +87,31 @@
       st.textContent = '#arkOtp{position:fixed;inset:0;z-index:2147483646;background:rgba(10,40,42,.92);display:flex;align-items:center;justify-content:center;padding:18px}#arkOtp form{background:#fff;border-radius:18px;max-width:380px;width:100%;padding:22px;direction:rtl;text-align:right}#arkOtp h3{margin:0 0 6px;color:#0B7C82}#arkOtp p{margin:0 0 12px;color:#4B6A6D;font-size:14px}#arkOtp input{width:100%;box-sizing:border-box;padding:12px;margin:0 0 10px;border:1.5px solid #cfe0e0;border-radius:10px;font-size:24px;letter-spacing:8px;text-align:center;user-select:text;-webkit-user-select:text}#arkOtp button{width:100%;padding:12px;border:0;border-radius:10px;background:#0B7C82;color:#fff;font-size:17px;font-weight:700;margin-bottom:8px}#arkOtp .l{display:flex;justify-content:space-between;font-size:13px}#arkOtp .l a{color:#0B7C82;cursor:pointer}#arkOtp .e{color:#b3261e;font-size:13px;min-height:18px}';
       document.head.appendChild(st); }
     var d = document.createElement('div'); d.id = 'arkOtp';
-    d.innerHTML = '<form><h3>كود التفعيل</h3><p>عشان يفتح الكتاب لازم تكتب كود التفعيل. اطلبه من <a href="https://t.me/smart_arkanBot" target="_blank" rel="noopener" style="color:#0B7C82;font-weight:700">@smart_arkanBot</a> على تيليجرام واكتب له: <b>كود التفعيل</b></p>' +
+    d.innerHTML = '<form><h3>كود التفعيل</h3><p>بعتنالك كود التفعيل على إيميلك <b dir="ltr" id="arkOM"></b>. اكتبه هنا عشان يفتح الكتاب.</p>' +
       '<input id="arkOI" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="20" placeholder="XXXX-XXXX-XXXX" dir="ltr" style="font-size:20px;letter-spacing:3px">' +
-      '<div class="e" id="arkOE"></div><button type="submit">تفعيل</button><div class="l"><a href="https://t.me/smart_arkanBot" target="_blank" rel="noopener">اطلب الكود من البوت</a><a id="arkOC">تغيير الإيميل</a></div></form>';
+      '<div class="e" id="arkOE"></div><button type="submit">تفعيل</button><div class="l"><a id="arkOR">أعد الإرسال</a><a id="arkOC">تغيير الإيميل</a></div></form>';
     document.body.appendChild(d);
     var E = document.getElementById('arkOE');
+    var em = String(u.email), at = em.indexOf('@'); document.getElementById('arkOM').textContent = at > 1 ? em[0] + '***' + em.slice(at - 1) : em;
+    var rBusy = false;
+    function resend(auto) {
+      if (rBusy) return; rBusy = true; if (!auto) { E.style.color = '#4B6A6D'; E.textContent = 'جاري الإرسال…'; }
+      post({ action: 'request' }).then(function (j) {
+        rBusy = false; if (auto && j.ok) return; E.style.color = j.ok ? '#0B7C82' : '';
+        E.textContent = j.ok ? 'اتبعت الكود على إيميلك ✅ (لو مش لاقيه شوف الـ Spam)' : j.error === 'cooldown' ? (auto ? '' : 'انتظر دقيقة' + (j.wait ? ' (' + j.wait + ' ثانية)' : '') + ' وجرّب تاني') : j.error === 'too_many' || j.error === 'rate_limited' ? 'محاولات كتير — جرّب بعد ساعة' : 'حصل خطأ في الإرسال، جرّب تاني';
+      }).catch(function () { rBusy = false; if (!auto) { E.style.color = ''; E.textContent = 'مفيش اتصال بالإنترنت'; } });
+    }
+    document.getElementById('arkOR').onclick = function () { resend(false); };
+    resend(true);
     document.getElementById('arkOC').onclick = function () { var x = user(); delete x.email; delete x.vf; s(UK, JSON.stringify(x)); d.remove(); askName(); };
     d.querySelector('form').addEventListener('submit', function (e) {
       e.preventDefault(); var c = document.getElementById('arkOI').value.toUpperCase().replace(/[^A-Z0-9]/g, '');
-      if (c.length < 10) { E.textContent = 'اكتب الكود كامل زي ما وصلك من البوت'; return; }
+      if (c.length < 10) { E.textContent = 'اكتب الكود كامل زي ما وصلك على الإيميل'; return; }
       E.style.color = '#4B6A6D'; E.textContent = 'جاري التحقق…';
       post({ action: 'activate', act: c }).then(function (j) {
         E.style.color = '';
         if (j.ok) { var x = user(); x.vf = x.email; s(UK, JSON.stringify(x)); d.remove(); ev('activated'); flush(false); return; }
-        E.textContent = j.error === 'wrong' ? 'الكود غلط — اطلبه من @smart_arkanBot' : j.error === 'locked' || j.error === 'rate_limited' ? 'محاولات كتير — جرّب بعد ربع ساعة' : 'حصل خطأ، جرّب تاني';
+        E.textContent = j.error === 'wrong' ? 'الكود غلط — راجع الميل أو اضغط أعد الإرسال' : j.error === 'locked' || j.error === 'rate_limited' ? 'محاولات كتير — جرّب بعد ربع ساعة' : 'حصل خطأ، جرّب تاني';
       }).catch(function () { E.textContent = 'مفيش اتصال بالإنترنت'; });
     });
     setTimeout(function () { var i = document.getElementById('arkOI'); if (i) i.focus(); }, 50);

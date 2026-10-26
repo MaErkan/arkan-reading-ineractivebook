@@ -14,8 +14,9 @@ export default async (req) => {
   const did = clip(p.did, 40).replace(/[^\w-]/g, '');
   const name = clip(p.name, 60).replace(/[\u0000-\u001f<>]/g, '').trim();
   if (!did || !name) return json({ error: 'no_identity' }, 400);
+  if ((+p.gen || 0) < 2) return json({ error: 'reregister' }, 409);
   const evs = (Array.isArray(p.ev) ? p.ev : []).slice(0, 80).filter((e) => e && TYPES.has(e.t));
-  const st = await anStore(); const key = 'u/' + did;
+  const st = await anStore(); const key = 'u2/' + did;
   const now = Date.now();
   const u = (await st.get(key)) || { did, first: now, sessions: 0, unlocks: 0, fails: 0, opens: {}, right: 0, wrong: 0, errs: [], tests: [], recent: [], idle: 0 };
   u.name = name; const email = clip(p.email, 80).trim().toLowerCase(); if (/^[^\s@<>]+@[^\s@<>]+\.[a-z]{2,}$/i.test(email)) u.email = email; u.verified = !!(u.email && u.verifiedEmail === u.email); if (p.phone) u.phone = clip(p.phone, 25).replace(/[^\d+ ]/g, ''); u.ua = clip(req.headers.get('user-agent'), 120); u.code = code;

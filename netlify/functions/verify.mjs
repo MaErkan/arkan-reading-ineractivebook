@@ -62,7 +62,7 @@ export default async (req) => {
     if ((o.tries || 0) >= MAX_TRIES) return json({ error: 'locked' }, 429);
     if (!safeEq(sha(c + '|' + email + '|' + salt()), o.h)) { o.tries = (o.tries || 0) + 1; await st.set(key, o); return json({ error: 'wrong', left: MAX_TRIES - o.tries }, 400); }
     o.h = ''; o.ok = now; await st.set(key, o);
-    const uk = 'u/' + did; const u = (await st.get(uk)) || { did, first: now, sessions: 0, unlocks: 0, fails: 0, opens: {}, right: 0, wrong: 0, errs: [], tests: [], recent: [], idle: 0 };
+    const uk = 'u2/' + did; const u = (await st.get(uk)) || { did, first: now, sessions: 0, unlocks: 0, fails: 0, opens: {}, right: 0, wrong: 0, errs: [], tests: [], recent: [], idle: 0 };
     u.email = email; u.verifiedEmail = email; u.verifiedAt = now; if (p.name) u.name = clip(p.name, 60).replace(/[\u0000-\u001f<>]/g, '').trim();
     await st.set(uk, u);
     return json({ ok: true, tok: sha('v|' + did + '|' + email + '|' + salt()).slice(0, 32) });

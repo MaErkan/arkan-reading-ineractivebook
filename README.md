@@ -11,3 +11,10 @@
 - أو `BREVO_API_KEY` + `EMAIL_FROM` (إيميل مرسل متحقق في Brevo)
 - أو `SMTP_HOST` `SMTP_PORT` `SMTP_USER` `SMTP_PASS` (مثلاً Gmail مع App Password)
 بدون أي منها، الكتاب يشتغل زي الأول من غير كود.
+
+## SMS activation (Twilio)
+The activation code is sent by email (mail queue) and, when configured, instantly by SMS.
+Set these in Netlify → Site settings → Environment variables (never commit them):
+- `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM` (Twilio number or alphanumeric sender, e.g. `Arkan`)
+- `ACTIVATION_CODE` (plain activation code used in the SMS body)
+If any are missing, SMS is skipped and email still goes out.

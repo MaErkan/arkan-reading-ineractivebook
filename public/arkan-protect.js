@@ -173,4 +173,25 @@
   window.addEventListener('focus', function () { cover(false); });
   window.addEventListener('beforeprint', function () { cover(true); });
   window.addEventListener('afterprint', function () { cover(false); });
+
+  // ===== رصد محاولات لقطة الشاشة وإبلاغ صاحب الكتاب (أفضل جهد) =====
+  var SHOT_GAP = 45000, lastShot = 0, hidAt = 0;
+  function shot(kind) {
+    if (!unlocked()) return;
+    var n = Date.now(); if (n - lastShot < SHOT_GAP) return; lastShot = n;
+    try { window.dispatchEvent(new CustomEvent('arkan-shot', { detail: { kind: kind } })); } catch (x) {}
+  }
+  window.__arkanShot = shot;
+  document.addEventListener('keydown', function (e) {
+    var k = (e.key || '').toLowerCase();
+    if (e.key === 'PrintScreen' || (e.metaKey && e.shiftKey && ['3', '4', '5', 's'].indexOf(k) > -1)) shot('keyboard');
+  }, true);
+  document.addEventListener('keyup', function (e) { if (e.key === 'PrintScreen') shot('keyboard'); }, true);
+  document.addEventListener('touchstart', function (e) { if (e.touches && e.touches.length >= 3) shot('three_finger'); }, { capture: true, passive: true });
+  // اختفاء قصير ثم رجوع خلال ثوانٍ (مسار شائع للقطات الموبايل/أدوات القص)
+  function gone() { if (!hidAt) hidAt = Date.now(); }
+  function back() { if (hidAt) { var d = Date.now() - hidAt; hidAt = 0; if (d > 80 && d < 3500) shot('focus_flash'); } }
+  document.addEventListener('visibilitychange', function () { if (document.hidden) gone(); else back(); });
+  window.addEventListener('blur', gone);
+  window.addEventListener('focus', back);
 })();

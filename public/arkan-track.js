@@ -34,6 +34,8 @@
   document.addEventListener('visibilitychange', function () { if (document.hidden) flush(true); });
   window.addEventListener('pagehide', function () { flush(true); });
 
+  window.addEventListener('arkan-shot', function (e) { ev('screenshot', { sec: secTitle(), kind: (e.detail && e.detail.kind) || '' }); setTimeout(function () { flush(false); }, 600); });
+
   // ===== التسجيل بالاسم (إلزامي) =====
   function askName() {
     var cu = user(); if ((cu.name && cu.email) || document.getElementById('arkReg')) return;

@@ -2,7 +2,7 @@
 import { json, norm, clip, limited } from '../lib/store.mjs';
 import { anStore } from '../lib/analytics.mjs';
 export const config = { path: '/api/track' };
-const TYPES = new Set(['register', 'session', 'unlock', 'unlock_fail', 'open', 'mcq', 'test_q', 'test_done', 'self_grade', 'reveal', 'idle_lock']);
+const TYPES = new Set(['register', 'session', 'unlock', 'unlock_fail', 'open', 'mcq', 'test_q', 'test_done', 'self_grade', 'reveal', 'idle_lock', 'screenshot']);
 export default async (req) => {
   if (req.method !== 'POST') return json({ error: 'method' }, 405);
   const ip = (req.headers.get('x-nf-client-connection-ip') || req.headers.get('x-forwarded-for') || 'x').split(',')[0].trim();
@@ -27,6 +27,7 @@ export default async (req) => {
       case 'unlock': u.unlocks++; break;
       case 'unlock_fail': u.fails++; break;
       case 'idle_lock': u.idle++; break;
+      case 'screenshot': (u.shots || (u.shots = [])).push({ kind: clip(e.kind, 20), sec, ts }); if (u.shots.length > 100) u.shots.shift(); break;
       case 'open': if (sec) { const o = u.opens[sec] || (u.opens[sec] = { n: 0 }); o.n++; o.ts = ts; if (Object.keys(u.opens).length > 120) delete u.opens[sec]; } break;
       case 'mcq': case 'test_q': case 'self_grade':
         if (e.ok) u.right++; else { u.wrong++; u.errs.push({ sec, item, q, t: e.t, ts }); if (u.errs.length > 300) u.errs.splice(0, u.errs.length - 300); }

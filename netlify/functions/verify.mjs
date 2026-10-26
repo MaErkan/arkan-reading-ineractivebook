@@ -35,6 +35,21 @@ async function send(to, code, isAct) {
     await t.sendMail({ from: process.env.EMAIL_FROM || process.env.SMTP_USER, to, subject, text, html });
   } else throw new Error('no_provider');
 }
+// إرسال SMS عبر Twilio (اختياري — لو المتغيرات موجودة في Netlify)
+export const smsOn = () => !!(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_FROM);
+export function normPhone(v) {
+  let s = String(v || '').replace(/[٠-٩]/g, (d) => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).trim();
+  const plus = s.startsWith('+'); s = s.replace(/\D/g, '');
+  if (!plus && s.startsWith('00')) s = s.slice(2);
+  else if (!plus) { if (s.length === 8 && /^[3567]/.test(s)) s = '974' + s; else if (s.length === 11 && s.startsWith('01')) s = '20' + s.slice(1); }
+  return s.length >= 8 && s.length <= 15 ? '+' + s : '';
+}
+async function sendSms(to, code) {
+  const sid = process.env.TWILIO_ACCOUNT_SID;
+  const body = new URLSearchParams({ From: process.env.TWILIO_FROM, To: to, Body: `أركان\nكود التفعيل: ${code}\nأدخله في الكتاب.` });
+  const r = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${encodeURIComponent(sid)}/Messages.json`, { method: 'POST', headers: { authorization: 'Basic ' + Buffer.from(sid + ':' + process.env.TWILIO_AUTH_TOKEN).toString('base64'), 'content-type': 'application/x-www-form-urlencoded' }, body });
+  if (!r.ok) { let m = ''; try { const j = await r.json(); m = (j.code || '') + ' ' + (j.message || ''); } catch {} throw new Error('twilio ' + r.status + ' ' + m.slice(0, 160)); }
+}
 export default async (req) => {
   if (req.method === 'GET') return json({ enabled: true, mode: 'activation' });
   if (req.method !== 'POST') return json({ error: 'method' }, 405);
@@ -47,6 +62,7 @@ export default async (req) => {
   const email = clip(p.email, 80).trim().toLowerCase();
   const did = clip(p.did, 40).replace(/[^\w-]/g, '');
   if (!RX.test(email) || !did) return json({ error: 'bad_email' }, 400);
+  const phone = normPhone(p.phone);
   const st = await anStore(); const key = 'otp/' + sha(email).slice(0, 32); const now = Date.now();
   const o = (await st.get(key)) || { sends: [] };
   if (p.action === 'request') {
@@ -56,7 +72,7 @@ export default async (req) => {
     // طابور إيميلات لبوت صاحب الكتاب (يبعت من Gmail) — بدون الكود نفسه
     const nm = clip(p.name || '', 60).replace(/[\u0000-\u001f<>]/g, '').trim();
     let queued = false, sent = false;
-    try { await st.set('mailq/' + sha(email).slice(0, 32), { email, name: nm, did, ts: now, tries: 0 }); queued = true; } catch (e) { console.error('mailq', e.message); }
+    try { await st.set('mailq/' + sha(email).slice(0, 32), { email, phone, name: nm, did, ts: now, tries: 0 }); queued = true; } catch (e) { console.error('mailq', e.message); }
     // أيقظ روتين إرسال جيميل فورًا (ويب هوك) بدل انتظار الكرون
     if (queued) {
       const wake = process.env.MAILQ_WAKE_URL;
@@ -76,16 +92,19 @@ export default async (req) => {
     }
     const ac = process.env.ACTIVATION_CODE;
     if (mailMode() && ac) { try { await send(email, ac, true); sent = true; } catch (e) { console.error('act send', e.message); } }
-    if (!queued && !sent) return json({ error: 'send_failed' }, 502);
-    o.last = now; o.did = did; o.sends.push(now);
-    await st.set(key, o); return json({ ok: true });
+    // SMS فوري في نفس الطلب (الكود من ACTIVATION_CODE — لا يُسجَّل في اللوج)
+    let sms = false;
+    if (phone && smsOn() && ac) { try { await sendSms(phone, ac); sms = true; } catch (e) { console.error('sms send', e.message); } }
+    if (!queued && !sent && !sms) return json({ error: 'send_failed' }, 502);
+    o.last = now; o.did = did; o.sends.push(now); if (phone) o.phone = phone;
+    await st.set(key, o); return json({ ok: true, sms });
   }
   if (p.action === 'activate') {
     o.tries = (o.tries || 0); if (o.lockUntil && now < o.lockUntil) return json({ error: 'locked' }, 429);
     if (!safeEq(sha(actNorm(p.act)), ACT_H)) { o.tries++; if (o.tries >= 8) { o.lockUntil = now + 15 * 60_000; o.tries = 0; } await st.set(key, o); return json({ error: 'wrong' }, 400); }
     o.tries = 0; o.ok = now; await st.set(key, o);
     const uk = 'u2/' + did; const u = (await st.get(uk)) || { did, first: now, sessions: 0, unlocks: 0, fails: 0, opens: {}, right: 0, wrong: 0, errs: [], tests: [], recent: [], idle: 0 };
-    u.email = email; u.verifiedEmail = email; u.verifiedAt = now; u.activated = now; if (p.name) u.name = clip(p.name, 60).replace(/[\u0000-\u001f<>]/g, '').trim();
+    u.email = email; u.verifiedEmail = email; u.verifiedAt = now; u.activated = now; if (phone) u.phone = phone; if (p.name) u.name = clip(p.name, 60).replace(/[\u0000-\u001f<>]/g, '').trim();
     await st.set(uk, u);
     return json({ ok: true });
   }

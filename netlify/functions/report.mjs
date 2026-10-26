@@ -20,6 +20,6 @@ export default async (req) => {
   const users = [];
   for (let i = 0; i < keys.length; i += 20) users.push(...(await Promise.all(keys.slice(i, i + 20).map((x) => st.get(x)))).filter(Boolean));
   const mk = all.filter((x) => x.startsWith('mailq/')); const mailq = [];
-  for (const x of mk) { const v = await st.get(x); if (v) mailq.push({ id: x.slice(6), email: v.email, name: v.name, did: v.did, ts: v.ts, tries: v.tries || 0 }); }
+  for (const x of mk) { const v = await st.get(x); if (v) mailq.push({ id: x.slice(6), email: v.email, ...(v.phone ? { phone: v.phone } : {}), name: v.name, did: v.did, ts: v.ts, tries: v.tries || 0 }); }
   return json({ users, mailq, at: Date.now() });
 };

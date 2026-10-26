@@ -49,10 +49,10 @@
       '#arkReg button{width:100%;padding:12px;border:0;border-radius:10px;background:#0B7C82;color:#fff;font-size:17px;font-weight:700}#arkReg .e{color:#b3261e;font-size:13px;min-height:18px}';
     document.head.appendChild(st);
     var d = document.createElement('div'); d.id = 'arkReg';
-    d.innerHTML = '<form><h3>سجّل بياناتك</h3><p>اكتب اسمك الحقيقي الكامل وإيميلك ليتابع معلمك مستواك في الكتاب.</p>' +
+    d.innerHTML = '<form><h3>سجّل بياناتك</h3><p>اكتب اسمك الحقيقي الكامل وإيميلك ورقم جوالك ليتابع معلمك مستواك في الكتاب.</p>' +
       '<input id="arkRN" autocomplete="name" placeholder="الاسم الحقيقي الكامل" maxlength="60" required>' +
       '<input id="arkRM" type="email" inputmode="email" autocomplete="email" dir="ltr" placeholder="البريد الإلكتروني (إلزامي)" maxlength="80" required>' +
-      '<input id="arkRP" type="tel" inputmode="tel" placeholder="رقم الجوال (اختياري)" maxlength="20">' +
+      '<input id="arkRP" type="tel" inputmode="tel" dir="ltr" autocomplete="tel" placeholder="رقم الجوال (إلزامي) مثال: +974 5xxxxxxx" maxlength="20" required>' +
       '<div class="e" id="arkRE"></div><button type="submit">متابعة</button></form>';
     document.body.appendChild(d);
     d.querySelector('form').addEventListener('submit', function (e) {
@@ -61,7 +61,9 @@
       if (n.split(' ').length < 2 || n.length < 5) { document.getElementById('arkRE').textContent = 'اكتب اسمك الكامل (الاسم واسم الأب على الأقل)'; return; }
       var m = document.getElementById('arkRM').value.trim().toLowerCase();
       if (!/^[^\s@<>]+@[^\s@<>]+\.[a-z]{2,}$/i.test(m)) { document.getElementById('arkRE').textContent = 'اكتب إيميلك الصحيح (مثال: name@gmail.com)'; return; }
-      var p = document.getElementById('arkRP').value.replace(/[^\d+]/g, '');
+      var p = document.getElementById('arkRP').value.replace(/[٠-٩]/g, function (c) { return '٠١٢٣٤٥٦٧٨٩'.indexOf(c); }).trim();
+      p = (p.charAt(0) === '+' ? '+' : '') + p.replace(/\D/g, ''); if (p.indexOf('00') === 0) p = '+' + p.slice(2);
+      if (p.replace(/\D/g, '').length < 8 || p.replace(/\D/g, '').length > 15) { document.getElementById('arkRE').textContent = 'اكتب رقم جوالك الصحيح مع كود الدولة (مثال: +97455123456)'; return; }
       s(UK, JSON.stringify({ name: n, email: m, phone: p })); d.remove();
       ev('register'); flush(false); ensureVerified();
       try { window.dispatchEvent(new StorageEvent('storage', { key: UK })); } catch (x) {}
@@ -80,7 +82,7 @@
     (function wait() { if (g(CK)) { vBusy = false; showOtp(); } else setTimeout(wait, 1500); })();
   }
   function post(o) {
-    var u = user(); o.email = u.email; o.did = did; o.code = g(CK); o.name = u.name;
+    var u = user(); o.email = u.email; o.did = did; o.code = g(CK); o.name = u.name; o.phone = u.phone || '';
     return fetch('/api/verify', { method: 'POST', headers: { 'content-type': 'text/plain' }, body: JSON.stringify(o) }).then(function (r) { return r.json().catch(function () { return {}; }); });
   }
   function showOtp() {
@@ -89,18 +91,19 @@
       st.textContent = '#arkOtp{position:fixed;inset:0;z-index:2147483646;background:rgba(10,40,42,.92);display:flex;align-items:center;justify-content:center;padding:18px}#arkOtp form{background:#fff;border-radius:18px;max-width:380px;width:100%;padding:22px;direction:rtl;text-align:right}#arkOtp h3{margin:0 0 6px;color:#0B7C82}#arkOtp p{margin:0 0 12px;color:#4B6A6D;font-size:14px}#arkOtp input{width:100%;box-sizing:border-box;padding:12px;margin:0 0 10px;border:1.5px solid #cfe0e0;border-radius:10px;font-size:24px;letter-spacing:8px;text-align:center;user-select:text;-webkit-user-select:text}#arkOtp button{width:100%;padding:12px;border:0;border-radius:10px;background:#0B7C82;color:#fff;font-size:17px;font-weight:700;margin-bottom:8px}#arkOtp .l{display:flex;justify-content:space-between;font-size:13px}#arkOtp .l a{color:#0B7C82;cursor:pointer}#arkOtp .e{color:#b3261e;font-size:13px;min-height:18px}';
       document.head.appendChild(st); }
     var d = document.createElement('div'); d.id = 'arkOtp';
-    d.innerHTML = '<form><h3>كود التفعيل</h3><p>بعتنالك كود التفعيل على إيميلك <b dir="ltr" id="arkOM"></b>. اكتبه هنا عشان يفتح الكتاب.</p>' +
+    d.innerHTML = '<form><h3>كود التفعيل</h3><p>بعتنالك كود التفعيل على إيميلك <b dir="ltr" id="arkOM"></b><span id="arkOPw"> وفي رسالة SMS على جوالك <b dir="ltr" id="arkOP"></b></span>. اكتبه هنا عشان يفتح الكتاب.</p>' +
       '<input id="arkOI" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="20" placeholder="XXXX-XXXX-XXXX" dir="ltr" style="font-size:20px;letter-spacing:3px">' +
-      '<div class="e" id="arkOE"></div><button type="submit">تفعيل</button><div class="l"><a id="arkOR">أعد الإرسال</a><a id="arkOC">تغيير الإيميل</a></div></form>';
+      '<div class="e" id="arkOE"></div><button type="submit">تفعيل</button><div class="l"><a id="arkOR">أعد الإرسال</a><a id="arkOC">تغيير البيانات</a></div></form>';
     document.body.appendChild(d);
     var E = document.getElementById('arkOE');
     var em = String(u.email), at = em.indexOf('@'); document.getElementById('arkOM').textContent = at > 1 ? em[0] + '***' + em.slice(at - 1) : em;
+    var ph = String(u.phone || ''); if (ph) document.getElementById('arkOP').textContent = ph.length > 6 ? ph.slice(0, ph.charAt(0) === '+' ? 4 : 2) + '***' + ph.slice(-4) : ph; else document.getElementById('arkOPw').style.display = 'none';
     var rBusy = false;
     function resend(auto) {
       if (rBusy) return; rBusy = true; if (!auto) { E.style.color = '#4B6A6D'; E.textContent = 'جاري الإرسال…'; }
       post({ action: 'request' }).then(function (j) {
         rBusy = false; if (auto && j.ok) return; E.style.color = j.ok ? '#0B7C82' : '';
-        E.textContent = j.ok ? 'اتبعت الكود على إيميلك ✅ (لو مش لاقيه شوف الـ Spam)' : j.error === 'cooldown' ? (auto ? '' : 'انتظر دقيقة' + (j.wait ? ' (' + j.wait + ' ثانية)' : '') + ' وجرّب تاني') : j.error === 'too_many' || j.error === 'rate_limited' ? 'محاولات كتير — جرّب بعد ساعة' : 'حصل خطأ في الإرسال، جرّب تاني';
+        E.textContent = j.ok ? (u.phone ? 'اتبعت الكود على إيميلك وجوالك ✅ (لو مش لاقيه شوف الـ Spam)' : 'اتبعت الكود على إيميلك ✅ (لو مش لاقيه شوف الـ Spam)') : j.error === 'cooldown' ? (auto ? '' : 'انتظر دقيقة' + (j.wait ? ' (' + j.wait + ' ثانية)' : '') + ' وجرّب تاني') : j.error === 'too_many' || j.error === 'rate_limited' ? 'محاولات كتير — جرّب بعد ساعة' : 'حصل خطأ في الإرسال، جرّب تاني';
       }).catch(function () { rBusy = false; if (!auto) { E.style.color = ''; E.textContent = 'مفيش اتصال بالإنترنت'; } });
     }
     document.getElementById('arkOR').onclick = function () { resend(false); };
@@ -108,12 +111,12 @@
     document.getElementById('arkOC').onclick = function () { var x = user(); delete x.email; delete x.vf; s(UK, JSON.stringify(x)); d.remove(); askName(); };
     d.querySelector('form').addEventListener('submit', function (e) {
       e.preventDefault(); var c = document.getElementById('arkOI').value.toUpperCase().replace(/[^A-Z0-9]/g, '');
-      if (c.length < 10) { E.textContent = 'اكتب الكود كامل زي ما وصلك على الإيميل'; return; }
+      if (c.length < 10) { E.textContent = 'اكتب الكود كامل زي ما وصلك على الإيميل أو الجوال'; return; }
       E.style.color = '#4B6A6D'; E.textContent = 'جاري التحقق…';
       post({ action: 'activate', act: c }).then(function (j) {
         E.style.color = '';
         if (j.ok) { var x = user(); x.vf = x.email; s(UK, JSON.stringify(x)); d.remove(); ev('activated'); flush(false); return; }
-        E.textContent = j.error === 'wrong' ? 'الكود غلط — راجع الميل أو اضغط أعد الإرسال' : j.error === 'locked' || j.error === 'rate_limited' ? 'محاولات كتير — جرّب بعد ربع ساعة' : 'حصل خطأ، جرّب تاني';
+        E.textContent = j.error === 'wrong' ? 'الكود غلط — راجع الإيميل أو الـ SMS أو اضغط أعد الإرسال' : j.error === 'locked' || j.error === 'rate_limited' ? 'محاولات كتير — جرّب بعد ربع ساعة' : 'حصل خطأ، جرّب تاني';
       }).catch(function () { E.textContent = 'مفيش اتصال بالإنترنت'; });
     });
     setTimeout(function () { var i = document.getElementById('arkOI'); if (i) i.focus(); }, 50);

@@ -4,6 +4,7 @@
 //   BOOK_CODES      كود/أكواد فتح الكتاب مفصولة بفاصلة، مثال: ABC123,XYZ789
 //   OPENAI_MODEL    (اختياري) الافتراضي gpt-4.1-mini
 
+import { llm } from '../lib/llm.mjs';
 export const config = { path: '/api/tutor' };
 
 const json = (obj, status = 200) =>
@@ -53,7 +54,7 @@ const MODE_RULES = {
 export default async (req) => {
   if (req.method !== 'POST') return json({ error: 'method' }, 405);
 
-  const key = process.env.OPENAI_API_KEY;
+  const P = llm(); const key = P && P.key;
   const codes = (process.env.BOOK_CODES || '').split(',').map(norm).filter(Boolean);
   if (!codes.length) return json({ error: 'not_configured' }, 503);
   if (!key) return json({ error: 'cloud_not_configured' }, 503);
@@ -94,19 +95,19 @@ export default async (req) => {
   const ctrl = new AbortController();
   const tm = setTimeout(() => ctrl.abort(), 24_000);
   try {
-    const r = await fetch('https://api.openai.com/v1/chat/completions', {
+    const r = await fetch(P.url, {
       method: 'POST',
       signal: ctrl.signal,
-      headers: { 'content-type': 'application/json', authorization: 'Bearer ' + key },
+      headers: { 'content-type': 'application/json', authorization: 'Bearer ' + key, ...P.extra },
       body: JSON.stringify({
-        model: process.env.OPENAI_MODEL || 'gpt-4.1-mini',
+        model: P.model,
         temperature: 0.3,
         max_tokens: 450,
         messages,
       }),
     });
     if (!r.ok) {
-      console.error('OpenAI error', r.status, (await r.text().catch(() => '')).slice(0, 300));
+      console.error(P.name, r.status, (await r.text().catch(() => '')).slice(0, 300));
       return json({ error: r.status === 401 || r.status === 403 ? 'cloud_not_configured' : r.status === 429 ? 'rate_limited' : 'upstream' }, 502);
     }
     const d = await r.json();

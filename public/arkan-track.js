@@ -8,13 +8,21 @@
   function user() { try { return JSON.parse(g(UK) || '{}') || {}; } catch (x) { return {}; } }
   var did = g(DK); if (!did) { did = 'd' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10); s(DK, did); }
   var Q; try { Q = JSON.parse(g(QK) || '[]'); } catch (x) { Q = []; } if (!Array.isArray(Q)) Q = [];
-  function ev(t, o) { var e = o || {}; e.t = t; e.ts = Date.now(); Q.push(e); if (Q.length > 400) Q.splice(0, Q.length - 400); s(QK, JSON.stringify(Q)); }
+  var nudged = false;
+  function nudge() {
+    if (nudged) return; nudged = true;
+    var b = document.createElement('a'); b.href = 'https://t.me/smart_arkanBot'; b.target = '_blank'; b.rel = 'noopener';
+    b.textContent = '💬 ناقش أغلاطك مع البوت: ابعت إيميلك لـ @smart_arkanBot ثم اكتب «أغلاطي»';
+    b.style.cssText = 'position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:2147483640;background:#0B7C82;color:#fff;padding:10px 14px;border-radius:12px;font-size:14px;direction:rtl;text-decoration:none;box-shadow:0 4px 16px rgba(0,0,0,.25);max-width:92%';
+    document.body.appendChild(b); setTimeout(function () { b.remove(); }, 12000);
+  }
+  function ev(t, o) { var e = o || {}; if (e.ok === false || (t === 'test_done' && e.pc < 70)) setTimeout(nudge, 1500); e.t = t; e.ts = Date.now(); Q.push(e); if (Q.length > 400) Q.splice(0, Q.length - 400); s(QK, JSON.stringify(Q)); }
   var busy = false;
   function flush(beacon) {
     var u = user(), code = g(CK);
-    if (!Q.length || !u.name || !code || busy) return;
+    if (!Q.length || !u.name || !u.email || !code || busy) return;
     var batch = Q.slice(0, 80);
-    var body = JSON.stringify({ did: did, name: u.name, phone: u.phone || '', code: code, ev: batch });
+    var body = JSON.stringify({ did: did, name: u.name, email: u.email || '', phone: u.phone || '', code: code, ev: batch });
     var done = function () { Q.splice(0, batch.length); s(QK, JSON.stringify(Q)); };
     if (beacon && navigator.sendBeacon) { if (navigator.sendBeacon('/api/track', new Blob([body], { type: 'text/plain' }))) done(); return; }
     busy = true;
@@ -28,7 +36,7 @@
 
   // ===== التسجيل بالاسم (إلزامي) =====
   function askName() {
-    if (user().name || document.getElementById('arkReg')) return;
+    var cu = user(); if ((cu.name && cu.email) || document.getElementById('arkReg')) return;
     var st = document.createElement('style');
     st.textContent = '#arkReg{position:fixed;inset:0;z-index:2147483645;background:rgba(10,40,42,.86);display:flex;align-items:center;justify-content:center;padding:18px;font-family:inherit}' +
       '#arkReg form{background:#fff;border-radius:18px;max-width:380px;width:100%;padding:22px;direction:rtl;text-align:right;box-shadow:0 10px 40px rgba(0,0,0,.3)}' +
@@ -37,8 +45,9 @@
       '#arkReg button{width:100%;padding:12px;border:0;border-radius:10px;background:#0B7C82;color:#fff;font-size:17px;font-weight:700}#arkReg .e{color:#b3261e;font-size:13px;min-height:18px}';
     document.head.appendChild(st);
     var d = document.createElement('div'); d.id = 'arkReg';
-    d.innerHTML = '<form><h3>سجّل اسمك</h3><p>اكتب اسمك الثلاثي ليتابع معلمك تقدّمك في الكتاب.</p>' +
-      '<input id="arkRN" autocomplete="name" placeholder="الاسم الثلاثي" maxlength="60" required>' +
+    d.innerHTML = '<form><h3>سجّل بياناتك</h3><p>اكتب اسمك الحقيقي الكامل وإيميلك ليتابع معلمك مستواك في الكتاب.</p>' +
+      '<input id="arkRN" autocomplete="name" placeholder="الاسم الحقيقي الكامل" maxlength="60" required>' +
+      '<input id="arkRM" type="email" inputmode="email" autocomplete="email" dir="ltr" placeholder="البريد الإلكتروني (إلزامي)" maxlength="80" required>' +
       '<input id="arkRP" type="tel" inputmode="tel" placeholder="رقم الجوال (اختياري)" maxlength="20">' +
       '<div class="e" id="arkRE"></div><button type="submit">متابعة</button></form>';
     document.body.appendChild(d);
@@ -46,12 +55,16 @@
       e.preventDefault();
       var n = document.getElementById('arkRN').value.replace(/\s+/g, ' ').trim();
       if (n.split(' ').length < 2 || n.length < 5) { document.getElementById('arkRE').textContent = 'اكتب اسمك الكامل (الاسم واسم الأب على الأقل)'; return; }
+      var m = document.getElementById('arkRM').value.trim().toLowerCase();
+      if (!/^[^\s@<>]+@[^\s@<>]+\.[a-z]{2,}$/i.test(m)) { document.getElementById('arkRE').textContent = 'اكتب إيميلك الصحيح (مثال: name@gmail.com)'; return; }
       var p = document.getElementById('arkRP').value.replace(/[^\d+]/g, '');
-      s(UK, JSON.stringify({ name: n, phone: p })); d.remove();
+      s(UK, JSON.stringify({ name: n, email: m, phone: p })); d.remove();
       ev('register'); flush(false);
       try { window.dispatchEvent(new StorageEvent('storage', { key: UK })); } catch (x) {}
     });
-    setTimeout(function () { var i = document.getElementById('arkRN'); if (i) i.focus(); }, 50);
+    if (cu.name) document.getElementById('arkRN').value = cu.name;
+    if (cu.phone) document.getElementById('arkRP').value = cu.phone;
+    setTimeout(function () { var i = document.getElementById(cu.name ? 'arkRM' : 'arkRN'); if (i) i.focus(); }, 50);
   }
 
   // ===== أحداث الاستخدام =====

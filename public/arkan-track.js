@@ -75,10 +75,7 @@
   function ensureVerified() {
     var u = user(); if (!u.email || u.vf === u.email || vBusy || document.getElementById('arkOtp')) return;
     vBusy = true;
-    fetch('/api/verify', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (j) {
-      if (!j || !j.enabled) { vBusy = false; return; }
-      (function wait() { if (g(CK)) { vBusy = false; showOtp(); } else setTimeout(wait, 1500); })();
-    }).catch(function () { vBusy = false; });
+    (function wait() { if (g(CK)) { vBusy = false; showOtp(); } else setTimeout(wait, 1500); })();
   }
   function post(o) {
     var u = user(); o.email = u.email; o.did = did; o.code = g(CK); o.name = u.name;
@@ -90,37 +87,23 @@
       st.textContent = '#arkOtp{position:fixed;inset:0;z-index:2147483646;background:rgba(10,40,42,.92);display:flex;align-items:center;justify-content:center;padding:18px}#arkOtp form{background:#fff;border-radius:18px;max-width:380px;width:100%;padding:22px;direction:rtl;text-align:right}#arkOtp h3{margin:0 0 6px;color:#0B7C82}#arkOtp p{margin:0 0 12px;color:#4B6A6D;font-size:14px}#arkOtp input{width:100%;box-sizing:border-box;padding:12px;margin:0 0 10px;border:1.5px solid #cfe0e0;border-radius:10px;font-size:24px;letter-spacing:8px;text-align:center;user-select:text;-webkit-user-select:text}#arkOtp button{width:100%;padding:12px;border:0;border-radius:10px;background:#0B7C82;color:#fff;font-size:17px;font-weight:700;margin-bottom:8px}#arkOtp .l{display:flex;justify-content:space-between;font-size:13px}#arkOtp .l a{color:#0B7C82;cursor:pointer}#arkOtp .e{color:#b3261e;font-size:13px;min-height:18px}';
       document.head.appendChild(st); }
     var d = document.createElement('div'); d.id = 'arkOtp';
-    d.innerHTML = '<form><h3>فعّل إيميلك</h3><p>بعتنا كود من 6 أرقام على <b dir="ltr"></b> — اكتبه هنا عشان يفتح الكتاب. (شوف كمان الرسائل غير المرغوب فيها / Spam)</p>' +
-      '<input id="arkOI" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="------">' +
-      '<div class="e" id="arkOE"></div><button type="submit">تأكيد</button><div class="l"><a id="arkOR">إعادة إرسال الكود</a><a id="arkOC">تغيير الإيميل</a></div></form>';
-    d.querySelector('b').textContent = u.email;
+    d.innerHTML = '<form><h3>كود التفعيل</h3><p>عشان يفتح الكتاب لازم تكتب كود التفعيل. اطلبه من <a href="https://t.me/smart_arkanBot" target="_blank" rel="noopener" style="color:#0B7C82;font-weight:700">@smart_arkanBot</a> على تيليجرام واكتب له: <b>كود التفعيل</b></p>' +
+      '<input id="arkOI" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="20" placeholder="XXXX-XXXX-XXXX" dir="ltr" style="font-size:20px;letter-spacing:3px">' +
+      '<div class="e" id="arkOE"></div><button type="submit">تفعيل</button><div class="l"><a href="https://t.me/smart_arkanBot" target="_blank" rel="noopener">اطلب الكود من البوت</a><a id="arkOC">تغيير الإيميل</a></div></form>';
     document.body.appendChild(d);
-    var E = document.getElementById('arkOE'), R = document.getElementById('arkOR'), cd = 0, tm;
-    function cool(n) { cd = n; clearInterval(tm); tm = setInterval(function () { cd--; R.textContent = cd > 0 ? 'إعادة الإرسال بعد ' + cd + ' ث' : 'إعادة إرسال الكود'; if (cd <= 0) clearInterval(tm); }, 1000); }
-    function req() {
-      if (cd > 0) return; E.style.color = '#4B6A6D'; E.textContent = 'جاري إرسال الكود…';
-      post({ action: 'request' }).then(function (j) {
-        E.style.color = '';
-        if (j.ok) { E.style.color = '#0B7C82'; E.textContent = 'اتبعت الكود ✔'; cool(60); }
-        else if (j.enabled === false) { d.remove(); }
-        else if (j.error === 'cooldown') { E.textContent = ''; cool(j.wait || 60); }
-        else if (j.error === 'too_many') E.textContent = 'طلبات كتير — جرّب بعد ساعة';
-        else if (j.error === 'send_failed') E.textContent = 'ما قدرناش نبعت على الإيميل ده — اتأكد إنه صحيح أو غيّره';
-        else E.textContent = 'حصل خطأ، جرّب تاني';
-      }).catch(function () { E.textContent = 'مفيش اتصال بالإنترنت'; });
-    }
-    R.onclick = req;
+    var E = document.getElementById('arkOE');
     document.getElementById('arkOC').onclick = function () { var x = user(); delete x.email; delete x.vf; s(UK, JSON.stringify(x)); d.remove(); askName(); };
     d.querySelector('form').addEventListener('submit', function (e) {
-      e.preventDefault(); var c = document.getElementById('arkOI').value.replace(/[٠-٩]/g, function (x) { return '٠١٢٣٤٥٦٧٨٩'.indexOf(x); }).replace(/\D/g, '');
-      if (c.length !== 6) { E.textContent = 'الكود 6 أرقام'; return; }
-      post({ action: 'confirm', otp: c }).then(function (j) {
-        if (j.ok) { var x = user(); x.vf = x.email; s(UK, JSON.stringify(x)); d.remove(); flush(false); return; }
+      e.preventDefault(); var c = document.getElementById('arkOI').value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+      if (c.length < 10) { E.textContent = 'اكتب الكود كامل زي ما وصلك من البوت'; return; }
+      E.style.color = '#4B6A6D'; E.textContent = 'جاري التحقق…';
+      post({ action: 'activate', act: c }).then(function (j) {
         E.style.color = '';
-        E.textContent = j.error === 'wrong' ? 'الكود غلط' + (j.left != null ? ' (باقي ' + j.left + ' محاولات)' : '') : j.error === 'expired' ? 'الكود انتهى — اطلب كود جديد' : j.error === 'locked' ? 'محاولات كتير — اطلب كود جديد' : 'حصل خطأ، جرّب تاني';
+        if (j.ok) { var x = user(); x.vf = x.email; s(UK, JSON.stringify(x)); d.remove(); ev('activated'); flush(false); return; }
+        E.textContent = j.error === 'wrong' ? 'الكود غلط — اطلبه من @smart_arkanBot' : j.error === 'locked' || j.error === 'rate_limited' ? 'محاولات كتير — جرّب بعد ربع ساعة' : 'حصل خطأ، جرّب تاني';
       }).catch(function () { E.textContent = 'مفيش اتصال بالإنترنت'; });
     });
-    req(); setTimeout(function () { var i = document.getElementById('arkOI'); if (i) i.focus(); }, 50);
+    setTimeout(function () { var i = document.getElementById('arkOI'); if (i) i.focus(); }, 50);
   }
 
   // ===== أحداث الاستخدام =====

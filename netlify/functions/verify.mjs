@@ -3,6 +3,9 @@ import { json, norm, clip, limited, safeEq } from '../lib/store.mjs';
 import { anStore } from '../lib/analytics.mjs';
 import { createHash, randomInt } from 'node:crypto';
 export const config = { path: '/api/verify' };
+// كود التفعيل الثابت (بيتبعت للطالب من @smart_arkanBot) — محفوظ كـ hash بس
+const ACT_H = process.env.ACTIVATION_HASH || '32df9a146ce787feb715fe89703581aadab5bb85e90348117cc9e7f45b15c9d5';
+const actNorm = (s) => String(s || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
 const RX = /^[^\s@<>]+@[^\s@<>]+\.[a-z]{2,}$/i;
 const TTL = 10 * 60_000, COOL = 60_000, MAX_SEND_H = 5, MAX_TRIES = 5;
 const sha = (s) => createHash('sha256').update(s).digest('hex');
@@ -33,7 +36,7 @@ async function send(to, code) {
   } else throw new Error('no_provider');
 }
 export default async (req) => {
-  if (req.method === 'GET') return json({ enabled: !!mailMode() });
+  if (req.method === 'GET') return json({ enabled: true, mode: 'activation' });
   if (req.method !== 'POST') return json({ error: 'method' }, 405);
   const ip = (req.headers.get('x-nf-client-connection-ip') || req.headers.get('x-forwarded-for') || 'x').split(',')[0].trim();
   if (limited(ip, 15)) return json({ error: 'rate_limited' }, 429);
@@ -44,7 +47,6 @@ export default async (req) => {
   const email = clip(p.email, 80).trim().toLowerCase();
   const did = clip(p.did, 40).replace(/[^\w-]/g, '');
   if (!RX.test(email) || !did) return json({ error: 'bad_email' }, 400);
-  if (!mailMode()) return json({ enabled: false });
   const st = await anStore(); const key = 'otp/' + sha(email).slice(0, 32); const now = Date.now();
   const o = (await st.get(key)) || { sends: [] };
   if (p.action === 'request') {
@@ -56,6 +58,16 @@ export default async (req) => {
     Object.assign(o, { h: sha(otp + '|' + email + '|' + salt()), exp: now + TTL, tries: 0, last: now, did }); o.sends.push(now);
     await st.set(key, o); return json({ ok: true, enabled: true });
   }
+  if (p.action === 'activate') {
+    o.tries = (o.tries || 0); if (o.lockUntil && now < o.lockUntil) return json({ error: 'locked' }, 429);
+    if (!safeEq(sha(actNorm(p.act)), ACT_H)) { o.tries++; if (o.tries >= 8) { o.lockUntil = now + 15 * 60_000; o.tries = 0; } await st.set(key, o); return json({ error: 'wrong' }, 400); }
+    o.tries = 0; o.ok = now; await st.set(key, o);
+    const uk = 'u2/' + did; const u = (await st.get(uk)) || { did, first: now, sessions: 0, unlocks: 0, fails: 0, opens: {}, right: 0, wrong: 0, errs: [], tests: [], recent: [], idle: 0 };
+    u.email = email; u.verifiedEmail = email; u.verifiedAt = now; u.activated = now; if (p.name) u.name = clip(p.name, 60).replace(/[\u0000-\u001f<>]/g, '').trim();
+    await st.set(uk, u);
+    return json({ ok: true });
+  }
+  if (!mailMode()) return json({ enabled: false });
   if (p.action === 'confirm') {
     const c = String(p.otp || '').replace(/[٠-٩]/g, (d) => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/\D/g, '');
     if (!o.h || now > o.exp) return json({ error: 'expired' }, 400);

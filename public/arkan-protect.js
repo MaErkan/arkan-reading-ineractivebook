@@ -70,7 +70,7 @@
   function stamp() { try { localStorage.setItem(ACT_KEY, String(Date.now())); } catch (x) {} }
   function lastActive() { try { return +localStorage.getItem(ACT_KEY) || 0; } catch (x) { return 0; } }
   function lockNow() {
-    try { localStorage.removeItem(UNLOCK_KEY); localStorage.removeItem(ACT_KEY); } catch (x) {}
+    try { localStorage.removeItem(UNLOCK_KEY); localStorage.removeItem(ACT_KEY); localStorage.setItem('arkan-idle-locked', '1'); } catch (x) {}
     cover(true);
     location.reload();
   }

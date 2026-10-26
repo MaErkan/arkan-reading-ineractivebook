@@ -1,4 +1,5 @@
 [build]
+  command = "node scripts/decode-icons.mjs"
   publish = "public"
   functions = "netlify/functions"
 

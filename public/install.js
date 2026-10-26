@@ -6,6 +6,9 @@
   s.defer = true;
   s.setAttribute('data-arkan-protect','1');
   (document.head || document.documentElement).appendChild(s);
+  var t = document.createElement('script');
+  t.src = '/arkan-track.js'; t.defer = true;
+  (document.head || document.documentElement).appendChild(t);
 })();
 /* Browser installation stays under the reader's control. */
 (() => {

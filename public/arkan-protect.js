@@ -6,8 +6,8 @@
   window.__arkanProtect = true;
   var OWNER = '© أركان التفاعلي في القراءة — محمد أركان';
   // ===== إعدادات يعدّلها صاحب الكتاب =====
-  // رقم صاحب الكتاب الذي يظهر في شاشة كلمة المرور (اكتبه بالصيغة الدولية مثل +201xxxxxxxxx)
-  var OWNER_CONTACT_PHONE = 'ضع_رقمك_هنا';
+  // طلب كلمة المرور يتم عبر بوت أركان على تيليجرام (بموافقة صاحب الكتاب)
+  var BOT_URL = 'https://t.me/smart_arkanBot';
   var IDLE_LOCK_MS = 5 * 60 * 1000; // قفل تلقائي بعد 5 دقائق بلا نشاط
   var UNLOCK_KEY = 'arkan-unlock-v1', ACT_KEY = 'arkan-last-active';
 
@@ -24,7 +24,7 @@
     '#cover{position:fixed;inset:0;background:#000;z-index:2147483646;display:none}' +
     'html.arkan-hide body>*:not(#cover):not(#lk){visibility:hidden!important}' +
     'img,video,canvas{-webkit-touch-callout:none;pointer-events:auto}' +
-    '#lkC{margin-top:12px;font-size:14.5px;font-weight:700;color:#4B6A6D}#lkC a{color:#0B7C82;direction:ltr;unicode-bidi:embed}';
+    '#lkC{margin-top:12px;font-size:14.5px;font-weight:700;color:#4B6A6D}#lkC a{color:#0B7C82;text-decoration:underline}';
   (document.head || document.documentElement).appendChild(css);
 
   // اسم/بريد الطالب من localStorage — يُعامل كنص فقط (لا innerHTML) لمنع XSS
@@ -99,17 +99,11 @@
     var f = document.getElementById('lkF');
     if (!f || document.getElementById('lkC')) return;
     var d = document.createElement('div'); d.id = 'lkC';
-    d.appendChild(document.createTextNode('للتواصل وطلب كلمة المرور: '));
-    var ph = String(OWNER_CONTACT_PHONE).replace(/[^\d+]/g, '');
-    if (ph.length >= 8) {
-      var a = document.createElement('a');
-      a.href = 'https://wa.me/' + ph.replace(/^\+/, '');
-      a.target = '_blank'; a.rel = 'noopener';
-      a.textContent = OWNER_CONTACT_PHONE;
-      d.appendChild(a);
-    } else {
-      d.appendChild(document.createTextNode('تواصل مع صاحب الكتاب'));
-    }
+    d.appendChild(document.createTextNode('نسيت كلمة المرور؟ '));
+    var a = document.createElement('a');
+    a.href = BOT_URL; a.target = '_blank'; a.rel = 'noopener';
+    a.textContent = 'اطلب كلمة المرور من بوت أركان على تيليجرام';
+    d.appendChild(a);
     f.appendChild(d);
   }
 

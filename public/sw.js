@@ -1,7 +1,7 @@
 // Service worker – أركان التفاعلي
-const VERSION = 'arkan-v24-concept-drills-icon';
-const CORE = ['./install.js', './icons/favicon-v4.ico', './icons/maskable-v4-192.png', './experience.css?v=20261023', './experience.js?v=20261023', './', './index.html', './tutor-ui.js', './teacher-review.js?v=1', './manifest.webmanifest',
-  './icons/icon-v4-192.png', './icons/icon-v4-512.png', './icons/maskable-v4-512.png', './icons/apple-touch-icon-v4.png', './icons/favicon-v4-32.png', './img/logo-scene.jpg', './img/arch-light.jpg', './img/mosque-blue.jpg'];
+const VERSION = 'arkan-v25-icon';
+const CORE = ['./install.js', './icons/favicon-v5.ico', './icons/maskable-v5-192.png', './experience.css?v=20261023', './experience.js?v=20261023', './', './index.html', './tutor-ui.js', './teacher-review.js?v=1', './manifest.webmanifest',
+  './icons/icon-v5-192.png', './icons/icon-v5-512.png', './icons/maskable-v5-512.png', './icons/apple-touch-icon-v5.png', './icons/favicon-v5-32.png', './img/logo-scene.jpg', './img/arch-light.jpg', './img/mosque-blue.jpg'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(VERSION).then(c => c.addAll(CORE)).then(() => self.skipWaiting()));

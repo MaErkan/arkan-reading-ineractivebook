@@ -1701,7 +1701,7 @@ async function aiGradeAuto(payload){
   return s.err==='no_sample'?{ok:false,err:'not_configured'}:s;
 }
 async function aiGradeServer(payload){
-  let code=''; try{ code=localStorage.getItem('arkan-unlock-v1')||''; }catch(e){}
+  let code=''; try{ code=localStorage.getItem('arkan-unlock-v2')||''; }catch(e){}
   const ctrl=new AbortController(), tm=setTimeout(()=>ctrl.abort(),26000);
   try{
     const r=await fetch(AI_URL,{method:'POST',signal:ctrl.signal,headers:{'content-type':'application/json','x-book-code':encodeURIComponent(code)},body:JSON.stringify(payload)});
@@ -1949,7 +1949,7 @@ const box=document.getElementById('lk'),inp=document.getElementById('lkI'),btn=d
 const B=JSON.parse(document.getElementById('data').textContent);
 const b64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
 const norm=s=>String(s||'').replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[۰-۹]/g,d=>'۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).trim().toUpperCase();
-const CK='arkan-unlock-v1';
+const CK='arkan-unlock-v2';
 async function tryCode(code){
   const k0=await crypto.subtle.importKey('raw',new TextEncoder().encode(norm(code)),'PBKDF2',false,['deriveKey']);
   const k=await crypto.subtle.deriveKey({name:'PBKDF2',salt:b64(B.s),iterations:B.n,hash:'SHA-256'},k0,{name:'AES-GCM',length:256},false,['decrypt']);

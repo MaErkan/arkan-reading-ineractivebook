@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   if (window.__arkanTrack) return; window.__arkanTrack = true;
-  var UK = 'arkan_user_v2', QK = 'arkan-trackq', DK = 'arkan-did', CK = 'arkan-unlock-v1';
+  var UK = 'arkan_user_v2', QK = 'arkan-trackq-v2', DK = 'arkan-did-v2', CK = 'arkan-unlock-v2';
   function g(k) { try { return localStorage.getItem(k); } catch (x) { return null; } }
   function s(k, v) { try { localStorage.setItem(k, v); } catch (x) {} }
   function user() { try { return JSON.parse(g(UK) || '{}') || {}; } catch (x) { return {}; } }
@@ -22,7 +22,7 @@
     var u = user(), code = g(CK);
     if (!Q.length || !u.name || !u.email || !code || busy) return;
     var batch = Q.slice(0, 80);
-    var body = JSON.stringify({ did: did, name: u.name, email: u.email || '', phone: u.phone || '', code: code, ev: batch });
+    var body = JSON.stringify({ gen: 2, did: did, name: u.name, email: u.email || '', phone: u.phone || '', code: code, ev: batch });
     var done = function () { Q.splice(0, batch.length); s(QK, JSON.stringify(Q)); };
     if (beacon && navigator.sendBeacon) { if (navigator.sendBeacon('/api/track', new Blob([body], { type: 'text/plain' }))) done(); return; }
     busy = true;

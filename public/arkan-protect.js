@@ -9,7 +9,7 @@
   // طلب كلمة المرور يتم عبر بوت أركان على تيليجرام (بموافقة صاحب الكتاب)
   var BOT_URL = 'https://t.me/smart_arkanBot';
   var IDLE_LOCK_MS = 5 * 60 * 1000; // قفل تلقائي بعد 5 دقائق بلا نشاط
-  var UNLOCK_KEY = 'arkan-unlock-v1', ACT_KEY = 'arkan-last-active';
+  var UNLOCK_KEY = 'arkan-unlock-v2', ACT_KEY = 'arkan-last-active';
 
   // أنماط المنع: التحديد، السحب، الطباعة
   var css = document.createElement('style');

@@ -55,10 +55,12 @@
     if (on) {
       if (c) c.style.display = 'block';
       document.documentElement.classList.add('arkan-hide');
+      // أمان: لا تبقى الشاشة سوداء أبداً والصفحة ظاهرة
+      offT = setTimeout(function () { if (!document.hidden) cover(false); }, 1200);
     } else {
       // تأخير بسيط قبل الإظهار حتى لا تلتقط لقطة الشاشة المحتوى لحظة الرجوع
       offT = setTimeout(function () {
-        if (document.hidden || (document.hasFocus && !document.hasFocus())) return;
+        if (document.hidden) return;
         if (c) c.style.display = 'none';
         document.documentElement.classList.remove('arkan-hide');
       }, 350);
@@ -169,7 +171,10 @@
     if (!e.touches || e.touches.length === 0) cover(false);
   }, { capture: true, passive: true });
   // حالة احتياطية: لو فقدت الصفحة التركيز دون حدث blur
-  setInterval(function () { if (document.hidden || (document.hasFocus && !document.hasFocus())) cover(true); }, 500);
+  setInterval(function () { if (document.hidden) cover(true); }, 1000);
+  ['pointerdown', 'touchend', 'keydown', 'scroll'].forEach(function (ev) {
+    window.addEventListener(ev, function (e) { if (!document.hidden && !(e.touches && e.touches.length >= 3)) cover(false); }, { capture: true, passive: true });
+  });
   window.addEventListener('focus', function () { cover(false); });
   window.addEventListener('beforeprint', function () { cover(true); });
   window.addEventListener('afterprint', function () { cover(false); });

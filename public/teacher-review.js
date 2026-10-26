@@ -20,7 +20,7 @@ document.head.appendChild(css);
 /* ---------- حالة الأجهزة ---------- */
 function st(){ var S=G('S'); if(!S) return null; if(!S.dev){ S.dev=Array.from(crypto.getRandomValues(new Uint8Array(12))).map(function(x){return (x%36).toString(36);}).join('')+Date.now().toString(36); } if(!S.rev) S.rev={}; return S; }
 function sv(){ try{ G('save')(); }catch(e){} }
-function code(){ try{ return localStorage.getItem('arkan-unlock-v1')||''; }catch(e){ return ''; } }
+function code(){ try{ return localStorage.getItem('arkan-unlock-v2')||''; }catch(e){ return ''; } }
 function esc(t){ return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 /* ---------- زر الطالب ---------- */

@@ -18,7 +18,7 @@
     'input,textarea,[contenteditable]{-webkit-user-select:text;user-select:text}' +
     'img{-webkit-user-drag:none}' +
     '@media print{body{display:none!important}}' +
-    '#wm{position:fixed;inset:0;z-index:2147483647;pointer-events:none;overflow:hidden;opacity:.09;' +
+    '#wm{position:fixed;inset:0;z-index:2147483647;pointer-events:none;overflow:hidden;opacity:.04;' +
     'font:700 16px sans-serif;color:#000;display:flex;flex-wrap:wrap;align-content:flex-start}' +
     '#wm span{width:260px;padding:38px 0;transform:rotate(-24deg);white-space:nowrap;text-align:center}' +
     '#cover{position:fixed;inset:0;background:#000;z-index:2147483646;display:none}' +

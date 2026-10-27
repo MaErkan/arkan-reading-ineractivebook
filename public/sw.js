@@ -1,5 +1,5 @@
 // Service worker – أركان التفاعلي
-const VERSION = 'arkan-v39-sms';
+const VERSION = 'arkan-v40-wm';
 const CORE = ['./install.js', './arkan-protect.js', './arkan-track.js', './icons/favicon-v5.ico', './icons/maskable-v5-192.png', './experience.css?v=20261023', './experience.js?v=20261023', './', './index.html', './tutor-ui.js', './teacher-review.js?v=1', './manifest.webmanifest',
   './icons/icon-v5-192.png', './icons/icon-v5-512.png', './icons/maskable-v5-512.png', './icons/apple-touch-icon-v5.png', './icons/favicon-v5-32.png', './img/logo-scene.jpg', './img/arch-light.jpg', './img/mosque-blue.jpg'];
 

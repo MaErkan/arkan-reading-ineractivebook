@@ -1,67 +1,44 @@
-// Service worker – أركان التفاعلي
-const VERSION = 'arkan-v40-wm';
-const CORE = ['./install.js', './arkan-protect.js', './arkan-track.js', './icons/favicon-v5.ico', './icons/maskable-v5-192.png', './experience.css?v=20261023', './experience.js?v=20261023', './', './index.html', './tutor-ui.js', './teacher-review.js?v=1', './manifest.webmanifest',
-  './icons/icon-v5-192.png', './icons/icon-v5-512.png', './icons/maskable-v5-512.png', './icons/apple-touch-icon-v5.png', './icons/favicon-v5-32.png', './img/logo-scene.jpg', './img/arch-light.jpg', './img/mosque-blue.jpg'];
+// Service worker – أركان التفاعلي (نسخة خفيفة)
+const VERSION = 'arkan-v185-ui-fixes';
+const CORE = ['./arkan-news.js', './arkan-ticker.js', './arkan-ticker.css', './', './index.html', './branches.html', './manifest.webmanifest', './install.js', './arkan-protect.js', './arkan-track.js', './arkan-auth.js?v=1', './arkan-pin.js', './qa-schools.js', './arkan-score.js?v=2', './portal-nav.js', './arkan-ai-notice.js?v=140', './arkan-theme.js', './arkan-resume.js?v=1', './arkan-theme.css', './arkan-portal-theme.css?v=4', './arkan-mihrab-landing.css?v=3', './experience.css?v=20261028', './icons/favicon-v5.ico', './icons/favicon-v5-32.png', './icons/icon-v5-192.png', './icons/maskable-v5-192.png', './icons/apple-touch-icon-v5.png'];
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(VERSION).then(c => c.addAll(CORE)).then(() => self.skipWaiting()));
+  e.waitUntil(caches.open(VERSION).then(c => Promise.all(CORE.map(u => c.add(u).catch(() => null)))).then(() => self.skipWaiting()));
 });
-
 self.addEventListener('activate', e => {
-  e.waitUntil(
-    caches.keys().then(keys => Promise.all(keys.filter(k => k !== VERSION).map(k => caches.delete(k))))
-      .then(() => self.clients.claim())
-  );
+  e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== VERSION).map(k => caches.delete(k)))).then(() => self.clients.claim()));
 });
-
 self.addEventListener('fetch', e => {
   const req = e.request;
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
-
-  // الصفحة: الشبكة أولاً (لتصلك التحديثات) ثم النسخة المخزنة عند انقطاع الإنترنت
+  if (url.origin !== location.origin) return;
+  if (/\.(mp4|m3u8|ts|mp3)$/i.test(url.pathname) || req.headers.has('range')) return; // الفيديو والصوت مباشرة
   if (req.mode === 'navigate') {
-    e.respondWith(
-      fetch(req).then(res => {
-        const copy = res.clone();
-        caches.open(VERSION).then(c => c.put('./index.html', copy));
-        return res;
-      }).catch(() => caches.match('./index.html'))
-    );
+    e.respondWith(fetch(req).then(res => {
+      if (res.ok) { const copy = res.clone(); caches.open(VERSION).then(c => c.put(req, copy)).catch(() => {}); }
+      return res;
+    }).catch(() => caches.match(req, { ignoreSearch: true }).then(r => r || caches.match('./index.html'))));
     return;
   }
-
-  // ملفات الحماية والتثبيت: من المخزن دائماً حتى بدون إنترنت (مع تجاهل أي query)
-  if (url.origin === location.origin && (url.pathname === '/arkan-protect.js' || url.pathname === '/install.js' || url.pathname === '/arkan-track.js')) {
-    e.respondWith(
-      caches.match(req, { ignoreSearch: true }).then(hit => {
-        const net = fetch(req).then(res => {
-          if (res && res.ok) {
-            const copy = res.clone();
-            caches.open(VERSION).then(c => c.put(url.pathname, copy));
-          }
-          return res;
-        }).catch(() => hit);
-        return hit || net;
-      })
-    );
+  // لا نخزّن الصور/الفيديو في كاش SW — يعتمد على CDN وكاش المتصفح لتتحمل الضغط
+  if (/\.(png|jpe?g|webp|gif|svg|mp4|webm|ico)$/i.test(url.pathname) || url.pathname.startsWith('/img/')) {
+    e.respondWith(fetch(req).catch(() => caches.match(req)));
     return;
   }
-
-  // الخطوط والملفات الثابتة: من المخزن أولاً مع تحديث في الخلفية
-  const isFont = url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com';
-  if (isFont || url.origin === location.origin) {
-    e.respondWith(
-      caches.match(req).then(hit => {
-        const net = fetch(req).then(res => {
-          if (res && (res.ok || res.type === 'opaque')) {
-            const copy = res.clone();
-            caches.open(VERSION).then(c => c.put(req, copy));
-          }
-          return res;
-        }).catch(() => hit);
-        return hit || net;
-      })
-    );
+  // network-first js so widgets pick up name/badge fixes
+  if (/\.js$/i.test(url.pathname)) {
+    e.respondWith(fetch(req).then(res => {
+      if (res && res.ok && res.type === 'basic') { const copy = res.clone(); caches.open(VERSION).then(c => c.put(req, copy)).catch(() => {}); }
+      return res;
+    }).catch(() => caches.match(req, { ignoreSearch: true })));
+    return;
   }
+  e.respondWith(caches.match(req).then(hit => {
+    const net = fetch(req).then(res => {
+      if (res && res.ok && res.type === 'basic') { const copy = res.clone(); caches.open(VERSION).then(c => c.put(req, copy)).catch(() => {}); }
+      return res;
+    }).catch(() => hit);
+    return hit || net;
+  }));
 });

@@ -1,17 +1,14 @@
 // طلبات اعتماد المعلم للأسئلة المقالية | Netlify Function (v2)
-// المتغيرات: BOOK_CODES (أكواد فتح الكتاب)
-import { reviewStore, json, norm, clip, limited, safeEq } from '../lib/store.mjs';
+// الدخول بهوية الطالب المسجّل (الاسم والمدرسة والصف).
+import { reviewStore, json, clip, limited } from '../lib/store.mjs';
+import { readIdentity, identityOk } from '../lib/identity.mjs';
 export const config = { path: '/api/review' };
 
 const okDev = (s) => /^[A-Za-z0-9]{8,40}$/.test(s || '');
 const okId = (s) => /^\d{1,3}-\d{1,3}$/.test(s || '');
 
 function codeOk(req) {
-  const codes = String(process.env.BOOK_CODES || '').split(',').map(norm).filter(Boolean);
-  if (!codes.length) return 'not_configured';
-  let c = ''; try { c = decodeURIComponent(req.headers.get('x-book-code') || ''); } catch { c = ''; }
-  c = norm(c);
-  return codes.some((x) => safeEq(x, c)) ? 'ok' : 'forbidden';
+  return identityOk(readIdentity(req)) ? 'ok' : 'forbidden';
 }
 
 export default async (req, context) => {

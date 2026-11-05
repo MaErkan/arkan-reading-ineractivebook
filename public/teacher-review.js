@@ -20,7 +20,7 @@ document.head.appendChild(css);
 /* ---------- حالة الأجهزة ---------- */
 function st(){ var S=G('S'); if(!S) return null; if(!S.dev){ S.dev=Array.from(crypto.getRandomValues(new Uint8Array(12))).map(function(x){return (x%36).toString(36);}).join('')+Date.now().toString(36); } if(!S.rev) S.rev={}; return S; }
 function sv(){ try{ G('save')(); }catch(e){} }
-function code(){ try{ return localStorage.getItem('arkan-unlock-v2')||''; }catch(e){ return ''; } }
+function code(){ return ''; }
 function esc(t){ return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 /* ---------- زر الطالب ---------- */
@@ -45,9 +45,9 @@ async function request(btn){
   var body={dev:S.dev,name:S.sname,id:id,std:shortTitle(reg.s.title),level:LV[lvOf(reg.it)-1].name,quote:G('quoteText')(reg.it),model:plain(reg.it.ans),qs:qs,
     ai:{verdict:g.verdict,score:g.score,why:g.why,missing:g.missing}};
   try{
-    var r=await fetch('/api/review',{method:'POST',headers:{'content-type':'application/json','x-book-code':encodeURIComponent(code())},body:JSON.stringify(body)});
+    var r=await fetch('/api/review',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)});
     var j=await r.json().catch(function(){return {};});
-    if(!r.ok){ btn.disabled=false; btn.textContent='🧑‍🏫 اطلب اعتماد المعلم'; alert(j.error==='not_configured'?'خدمة اعتماد المعلم غير مفعّلة بعد.':j.error==='forbidden'?'أعد فتح الكتاب بالكود ثم حاول.':'تعذّر الإرسال الآن، حاول لاحقًا.'); return; }
+    if(!r.ok){ btn.disabled=false; btn.textContent='🧑‍🏫 اطلب اعتماد المعلم'; alert(j.error==='not_configured'?'خدمة اعتماد المعلم غير مفعّلة بعد.':j.error==='forbidden'?'سجّل دخولك بالرقم السري ثم حاول.':'تعذّر الإرسال الآن، حاول لاحقًا.'); return; }
     S.rev[id]={st:j.status==='approved'?'approved':'pending',ts:Date.now()}; sv(); setBox(id); schedule();
   }catch(e){ btn.disabled=false; btn.textContent='🧑‍🏫 اطلب اعتماد المعلم'; alert('تعذّر الاتصال بالخادم، تحقق من الإنترنت.'); }
 }
@@ -59,7 +59,7 @@ function schedule(){ if(timer||!pendingIds().length) return; timer=setInterval(p
 async function poll(){
   var S=st(); if(!S) return; var ids=pendingIds(); if(!ids.length){ clearInterval(timer); timer=null; return; }
   try{
-    var r=await fetch('/api/review?dev='+encodeURIComponent(S.dev)+'&ids='+ids.join(','),{headers:{'x-book-code':encodeURIComponent(code())}});
+    var r=await fetch('/api/review?dev='+encodeURIComponent(S.dev)+'&ids='+ids.join(','));
     if(!r.ok) return; var j=await r.json(), changed=false, okN=0;
     Object.keys(j.decisions||{}).forEach(function(id){
       var d=j.decisions[id]; if(!S.rev[id]||S.rev[id].st!=='pending') return;

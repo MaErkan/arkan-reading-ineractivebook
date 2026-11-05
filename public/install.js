@@ -6,9 +6,12 @@
   s.defer = true;
   s.setAttribute('data-arkan-protect','1');
   (document.head || document.documentElement).appendChild(s);
-  var t = document.createElement('script');
-  t.src = '/arkan-track.js'; t.defer = true;
-  (document.head || document.documentElement).appendChild(t);
+  ['/qa-schools.js', '/arkan-pin.js', '/arkan-auth.js', '/arkan-track.js'].forEach(function (src) {
+    if (document.querySelector('script[src^="' + src + '"]')) return;
+    var t = document.createElement('script');
+    t.src = src + '?v=190';
+    (document.head || document.documentElement).appendChild(t);
+  });
 })();
 /* Browser installation stays under the reader's control. */
 (() => {
@@ -35,7 +38,7 @@
       if (result.outcome === 'accepted') buttons.forEach(button => { button.hidden = true; });
     } catch { dialog.showModal(); }
   }
-  [document.querySelector('.bar-in'), document.querySelector('#lkF')].forEach(container => {
+  [document.querySelector('.bar-in')].forEach(container => {
     if (!container) return;
     const button = document.createElement('button');
     button.type = 'button';

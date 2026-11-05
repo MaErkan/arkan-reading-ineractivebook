@@ -365,6 +365,36 @@ textarea:focus{outline:none;border-style:solid;border-color:var(--teal);backgrou
 .txp .textbox{border:0;border-radius:0;box-shadow:none;max-height:62vh;overflow:auto}
 @media (max-width:620px){ .extext .poem{padding-inline-start:1.2em} .extext .vn{inset-inline-start:-1.3em} }
 
+
+/* ========== مؤقّت الاختبار (القراءة + التدريبي) ========== */
+.tdur{margin:14px 0 16px;padding:14px 16px 12px;background:var(--card);color:var(--ink);border:2px solid var(--gold);border-radius:22px;box-shadow:var(--shadow)}
+.tdur h4{margin:0 0 6px;font-family:var(--display);font-weight:400;font-size:24px;line-height:1.45;color:var(--teal-deep)}
+.tdur p{margin:0 0 10px;font-family:var(--ui);font-size:15.5px;line-height:1.85;color:var(--muted);font-weight:700}
+.tdur-row{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 12px}
+.tdur-b{border:2px solid var(--gold);background:var(--card);color:var(--ink);border-radius:999px;padding:6px 14px 7px;font-weight:800;font-size:15px;line-height:1.4;box-shadow:2px 2px 0 color-mix(in srgb,var(--gold) 70%,var(--edge))}
+.tdur-b:hover{transform:translateY(-1px)}
+.tdur-b.on{background:var(--sun);color:var(--edge);border-color:var(--edge);box-shadow:2px 2px 0 var(--edge)}
+.tdur-custom{display:flex;flex-wrap:wrap;align-items:center;gap:10px;font-weight:800;color:var(--ink);font-size:15px}
+.tdur-custom input{width:8.2em;max-width:100%;border:2px solid var(--line);background:var(--paper);color:var(--ink);border-radius:14px;padding:8px 12px;font:inherit;font-weight:800;font-variant-numeric:tabular-nums}
+.tdur-custom input:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 4px var(--sun-soft)}
+.tdur-now{font-weight:800;color:var(--teal-deep)!important;margin-top:10px!important}
+.tdur-err{color:var(--bad)!important;font-weight:800}
+.tclock-wrap{position:sticky;top:var(--tclock-top,128px);z-index:16;margin:0 0 14px}
+.tclock{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px;background:var(--card);color:var(--ink);border:2.5px solid var(--gold);border-radius:20px;box-shadow:0 10px 24px -16px rgba(0,0,0,.55)}
+.tclock span{font-weight:800;color:var(--muted);font-size:15.5px}
+.tclock b{font-family:var(--display);font-weight:400;font-size:34px;line-height:1;color:var(--teal-deep);font-variant-numeric:tabular-nums;letter-spacing:.04em}
+.tclock.soon{border-color:var(--sun-deep);background:var(--sun-soft)}
+.tclock.soon b{color:var(--sun-deep)}
+.tclock.warn,.tclock.done{border-color:var(--bad);background:var(--bad-soft)}
+.tclock.warn b,.tclock.done b{color:var(--bad)}
+.tlockmsg{margin:8px 0 0;padding:14px 16px;border-radius:20px;border:2px dashed var(--bad);background:var(--bad-soft);color:var(--ink);box-shadow:0 10px 24px -16px rgba(0,0,0,.45)}
+.tlockmsg b{display:block;font-family:var(--display);font-weight:400;font-size:24px;line-height:1.45;color:var(--bad);margin-bottom:4px}
+.tlockmsg p{margin:0;font-family:var(--ui);font-size:17px;line-height:1.85;font-weight:700}
+.tq.is-locked textarea:disabled,.texam.is-locked textarea:disabled{opacity:1;color:var(--ink);-webkit-text-fill-color:var(--ink);background:color-mix(in srgb,var(--line2) 70%,var(--card));cursor:not-allowed}
+.tq.is-locked button:disabled,.texam.is-locked button:disabled{opacity:1;cursor:not-allowed;filter:none}
+.tq.is-locked .opt,.texam.is-locked .opt,.tq.is-locked button,.texam.is-locked button,.tq.is-locked textarea,.texam.is-locked textarea{pointer-events:none}
+@media (max-width:620px){.tclock b{font-size:28px}.tdur{padding:12px 12px 10px}}
+
 /* ========== ملاحظات لاصقة ========== */
 .nhead{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .nhead h2.pill{margin-bottom:14px}
@@ -1119,6 +1149,7 @@ function exCtx(g){
   return '';
 }
 function renderExam(s){
+  timerSync(s);
   const list=itemsOf(s); let h='', lastG=-2, open=false;
   list.forEach((it,i)=>{
     if(it.g!==lastG){
@@ -1128,7 +1159,9 @@ function renderExam(s){
     h+=renderItem(s,it._k,it,i);
   });
   if(open) h+='</div>';
-  return h+clearBar(s,'bot');
+  if(!timerStarted(s)) return exmIntro(s);
+  const locked=timerIsLocked(s);
+  return timerClockHtml(s)+`<div class="texam${locked?' is-locked':''}">`+h+`</div>`+clearBar(s,'bot');
 }
 
 // ---------- section views ----------
@@ -1176,6 +1209,7 @@ function renderSection(i){
      (p?`<button type="button" data-go="${p.idx}" style="text-align:left">السابق<b>${esc(shortTitle(p.title))}</b></button>`:'')+'</div>';
   document.getElementById('main').innerHTML=h;
   renderToc(); renderMeter(); document.querySelectorAll('.item').forEach(gate);
+  if(SECS[cur]&&(SECS[cur].type==='exm')){ timerRestorePicks(SECS[cur]); timerApplyDomLock(); timerPlace(); timerArm(); }
 }
 
 
@@ -1197,6 +1231,269 @@ document.addEventListener('click',e=>{ const b=e.target.closest('.reveal[aria-di
 document.addEventListener('input',e=>{ const t=e.target; if(t.tagName==='TEXTAREA' && !t.dataset.n) gate(t.closest('.item')); });
 document.addEventListener('click',e=>{ const o=e.target.closest('.opt'); if(o) setTimeout(()=>gate(o.closest('.item')),0); });
 
+
+// ---------- مؤقّت محاولة الاختبار (قراءة + تدريبي) ----------
+const TIMER_STORE='arkan-test-timer-v1';
+const TIMER_PRESETS=[10,15,20,30,45,60];
+function timerWho(){
+  try{
+    const u=JSON.parse(localStorage.getItem('arkan_user_v2')||'{}')||{};
+    const email=typeof u.email==='string'?u.email.trim().toLowerCase():'';
+    const name=typeof u.name==='string'?u.name.trim():'';
+    if(email||name) return (email||name).slice(0,80);
+  }catch(e){}
+  try{
+    let d=localStorage.getItem('arkan-did-v2');
+    if(!d){ d='d'+Date.now().toString(36)+Math.random().toString(36).slice(2,8); localStorage.setItem('arkan-did-v2', d); }
+    return d;
+  }catch(e){ return 'local'; }
+}
+function timerId(s){
+  if(!s) return '';
+  if(s.type==='test') return 'test:'+s.tno+':'+tsfx();
+  if(s.type==='exm') return 'exm:'+s.idx+':'+tsfx();
+  return '';
+}
+function timerKey(s){ const id=timerId(s); return id ? timerWho()+'|'+id : ''; }
+function timerStore(){ try{ const o=JSON.parse(localStorage.getItem(TIMER_STORE)||'{}'); return o&&typeof o==='object'&&!Array.isArray(o)?o:{}; }catch(e){ return {}; } }
+function timerWrite(all){ try{ localStorage.setItem(TIMER_STORE, JSON.stringify(all)); }catch(e){} }
+function timerGet(s){ const k=timerKey(s); if(!k) return null; const rec=timerStore()[k]; return rec&&typeof rec==='object'?rec:null; }
+function timerSet(s, rec){ const k=timerKey(s); if(!k) return; const all=timerStore(); if(rec) all[k]=rec; else delete all[k]; timerWrite(all); }
+function timerClear(s){ timerSet(s, null); }
+function timerClearStudent(){ const all=timerStore(), p=timerWho()+'|'; Object.keys(all).forEach(k=>{ if(k.startsWith(p)) delete all[k]; }); timerWrite(all); }
+function timerParseMin(v){
+  const s=String(v==null?'':v).replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[۰-۹]/g,d=>'۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).trim();
+  if(!/^\d+$/.test(s)) return 0;
+  const n=+s; return n>=1&&n<=180?n:0;
+}
+function timerMinutes(s){ const rec=timerGet(s); const m=rec?+rec.minutes||0:0; return m>=1&&m<=180?m:0; }
+function timerStarted(s){ const rec=timerGet(s); return !!(rec&&rec.startedAt); }
+function timerIsLocked(s){
+  const rec=timerGet(s);
+  if(!rec||!rec.startedAt) return false;
+  if(rec.locked) return true;
+  return Date.now()>=rec.startedAt+(rec.durationMs||0);
+}
+function timerSync(s){
+  if(!s) return;
+  const rec=timerGet(s);
+  if(!rec||!rec.startedAt||rec.locked) return;
+  if(s.type==='test'&&T&&T.phase==='res') return;
+  if(Date.now()>=rec.startedAt+(rec.durationMs||0)){ rec.locked=true; timerSet(s, rec); }
+}
+function timerChoose(s, minutes, via){
+  const prev=timerGet(s);
+  if(prev&&prev.startedAt) return;
+  timerSet(s, {minutes:minutes|0, via:via||'preset', startedAt:null, durationMs:null, locked:false});
+}
+function timerBegin(s){
+  const prev=timerGet(s)||{};
+  if(prev.locked||prev.startedAt) return !prev.locked && !!prev.startedAt;
+  const m=timerMinutes(s); if(!m) return false;
+  const now=Date.now();
+  timerSet(s, {minutes:m, via:prev.via||'preset', startedAt:now, durationMs:m*60000, locked:false});
+  timerArm();
+  return true;
+}
+function timerFmt(ms){
+  const tot=Math.max(0, Math.ceil(ms/1000));
+  const h=Math.floor(tot/3600), m=Math.floor((tot%3600)/60), ss=tot%60;
+  const p=n=>String(n).padStart(2,'0');
+  return h>0 ? p(h)+':'+p(m)+':'+p(ss) : p(m)+':'+p(ss);
+}
+function timerBlocksAnswers(){
+  const s=SECS[cur];
+  if(!s||(s.type!=='test'&&s.type!=='exm')) return false;
+  if(s.type==='test'&&T&&T.phase==='res') return false;
+  return timerIsLocked(s);
+}
+function timerPickerHtml(s){
+  const rec=timerGet(s)||{};
+  const m=+rec.minutes||0;
+  const via=rec.via||'preset';
+  const presets=TIMER_PRESETS.map(n=>{
+    const on=m===n&&via!=='custom';
+    return `<button type="button" class="tdur-b${on?' on':''}" data-tmins="${n}" aria-pressed="${on?'true':'false'}">${n} دقائق</button>`;
+  }).join('');
+  const custom=(via==='custom'&&m)?String(m):'';
+  const now=m>=1?`المدة المختارة: ${m} دقيقة. العدّ لم يبدأ بعد.`:'لم تختر مدة بعد. العدّ لن يبدأ حتى تضغط زر بدء الاختبار.';
+  return `<div class="tdur"><h4>حدّد مدة الاختبار</h4>
+    <p>اختر المدة بالدقائق. اختيار المدة وحدها لا يشغّل الساعة، ولن يبدأ العدّ التنازلي إلا عندما تضغط زر بدء الاختبار.</p>
+    <div class="tdur-row" role="group" aria-label="مدد جاهزة">${presets}</div>
+    <label class="tdur-custom">أو مدة مخصصة بالدقائق
+      <input type="number" min="1" max="180" step="1" inputmode="numeric" dir="ltr" data-tcustom value="${esc(custom)}" placeholder="مثال: 25" aria-label="مدة مخصصة بالدقائق" autocomplete="off">
+    </label>
+    <p class="tdur-now" data-tdur-now>${now}</p>
+    <p class="tdur-err" data-tdur-err hidden>اختر مدة الاختبار بالدقائق أولًا (من 1 إلى 180).</p>
+  </div>`;
+}
+function exmIntro(s){
+  const n=itemsOf(s).length;
+  return `<div class="tintro"><h3>اختبار تدريبي</h3>
+    <p>حدّد مدة هذا الاختبار بنفسك. اختيار المدة لا يبدأ العدّ، ولن تُفتح الأسئلة إلا بعد ضغط «ابدأ الاختبار».</p>
+    <div class="tstats"><div><b>${n}</b>سؤالًا</div></div>
+    ${timerPickerHtml(s)}
+    <button type="button" class="tgo" data-tstart>ابدأ الاختبار</button>
+  </div>`;
+}
+function timerClockHtml(s){
+  const rec=timerGet(s);
+  if(!rec||!rec.startedAt) return '';
+  const locked=timerIsLocked(s);
+  const left=locked?0:Math.max(0, rec.startedAt+(rec.durationMs||0)-Date.now());
+  let cls='';
+  if(locked) cls=' done';
+  else if(left<=60000) cls=' warn';
+  else if(left<=300000) cls=' soon';
+  const label=locked?'انتهى الوقت':'الوقت المتبقي';
+  const msg=locked?`<div class="tlockmsg" role="alert"><b>انتهى وقت الاختبار</b><p>سُحبت الورقة وأُقفلت إجابات هذه المحاولة. لا يمكنك الإجابة ولا تعديل ما كتبته ولا تسليم الأسئلة.</p></div>`:'';
+  return `<div class="tclock-wrap"><div class="tclock${cls}" role="timer" data-tclock><span data-tclock-l>${label}</span><b data-tclock-v>${timerFmt(left)}</b></div>${msg}</div>`;
+}
+function timerPaintPicker(){
+  const s=SECS[cur]; if(!s||(s.type!=='test'&&s.type!=='exm')||timerStarted(s)) return;
+  const rec=timerGet(s)||{};
+  const m=+rec.minutes||0;
+  const via=rec.via||'preset';
+  document.querySelectorAll('.tdur [data-tmins]').forEach(b=>{
+    const on=m===+b.dataset.tmins&&via!=='custom';
+    b.classList.toggle('on', on);
+    b.setAttribute('aria-pressed', on?'true':'false');
+  });
+  const now=document.querySelector('[data-tdur-now]');
+  if(now) now.textContent=m>=1?`المدة المختارة: ${m} دقيقة. العدّ لم يبدأ بعد.`:'لم تختر مدة بعد. العدّ لن يبدأ حتى تضغط زر بدء الاختبار.';
+  if(m>=1){ const err=document.querySelector('[data-tdur-err]'); if(err) err.hidden=true; }
+}
+function timerShowNeed(){
+  const p=document.querySelector('[data-tdur-err]');
+  if(p){ p.hidden=false; p.textContent='اختر مدة الاختبار بالدقائق أولًا (من 1 إلى 180).'; }
+  const box=document.querySelector('.tdur'); if(box) box.scrollIntoView({behavior:'smooth', block:'center'});
+}
+function timerPlace(){
+  const bar=document.querySelector('.bar');
+  const h=bar?Math.ceil(bar.getBoundingClientRect().height)+8:128;
+  document.documentElement.style.setProperty('--tclock-top', h+'px');
+}
+function timerPaintClock(){
+  const s=SECS[cur]; const el=document.querySelector('[data-tclock]');
+  if(!s||!el) return;
+  const rec=timerGet(s); if(!rec||!rec.startedAt||rec.locked||timerIsLocked(s)) return;
+  const left=Math.max(0, rec.startedAt+(rec.durationMs||0)-Date.now());
+  const b=el.querySelector('[data-tclock-v]'); if(b) b.textContent=timerFmt(left);
+  el.classList.toggle('warn', left<=60000);
+  el.classList.toggle('soon', left>60000&&left<=300000);
+  const lab=el.querySelector('[data-tclock-l]'); if(lab) lab.textContent='الوقت المتبقي';
+}
+function timerFlush(s){
+  try{
+    if(s.type==='test'&&T&&T.phase==='q'){ tCapture(); tSave(); return; }
+    if(s.type==='exm'){
+      const picks={};
+      document.querySelectorAll('#main .texam textarea[data-k]').forEach(t=>{ S.txt[t.dataset.k]=t.value; });
+      document.querySelectorAll('#main .texam .opts').forEach(w=>{
+        if(w.classList.contains('locked')) return;
+        const sel=w.querySelector('.opt.sel');
+        if(w.dataset.id!=null&&sel) picks[w.dataset.id+':'+w.dataset.qi]=sel.dataset.o;
+      });
+      const rec=timerGet(s); if(rec){ rec.picks=picks; timerSet(s, rec); }
+      save();
+    }
+  }catch(e){}
+}
+function timerRestorePicks(s){
+  const rec=s&&timerGet(s); if(!rec||!rec.picks) return;
+  Object.keys(rec.picks).forEach(k=>{
+    const cut=k.lastIndexOf(':'); if(cut<0) return;
+    const id=k.slice(0,cut), qi=k.slice(cut+1), oi=rec.picks[k];
+    const w=document.querySelector('#main .texam .opts[data-id="'+id+'"][data-qi="'+qi+'"]');
+    if(!w||w.classList.contains('locked')) return;
+    const op=w.querySelector('.opt[data-o="'+oi+'"]'); if(!op) return;
+    op.classList.add('sel'); w.dataset.sel=String(oi);
+  });
+}
+function timerApplyDomLock(){
+  document.querySelectorAll('.tq.is-locked, .texam.is-locked').forEach(root=>{
+    root.querySelectorAll('textarea, input, select, button').forEach(el=>{
+      el.disabled=true; el.setAttribute('aria-disabled','true');
+    });
+  });
+}
+function timerLockNow(s){
+  const rec=timerGet(s);
+  if(!rec||!rec.startedAt||rec.locked) return;
+  if(s.type==='test'&&T&&T.phase==='res') return;
+  timerFlush(s);
+  const curRec=timerGet(s)||rec;
+  curRec.locked=true;
+  timerSet(s, curRec);
+  if(s.type==='test'&&T&&T.s===s) renderTest(s);
+  else if(s.type==='exm'&&SECS[cur]===s) renderSection(s.idx);
+}
+let timerIv=null;
+function timerTick(){
+  const s=SECS[cur];
+  if(!s||(s.type!=='test'&&s.type!=='exm')) return;
+  const rec=timerGet(s);
+  if(!rec||!rec.startedAt) return;
+  if(s.type==='test'&&T&&T.phase==='res') return;
+  if(rec.locked||Date.now()>=rec.startedAt+(rec.durationMs||0)){
+    if(!rec.locked) timerLockNow(s);
+    return;
+  }
+  timerPaintClock();
+}
+function timerArm(){ timerPlace(); if(timerIv) return; timerIv=setInterval(timerTick, 250); }
+document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) timerTick(); });
+window.addEventListener('resize', timerPlace);
+document.addEventListener('click', e=>{
+  const pre=e.target.closest&&e.target.closest('[data-tmins]');
+  if(pre){
+    const s=SECS[cur];
+    if(!s||(s.type!=='test'&&s.type!=='exm')||timerStarted(s)) return;
+    timerChoose(s, +pre.dataset.tmins, 'preset');
+    const inp=document.querySelector('[data-tcustom]'); if(inp) inp.value='';
+    timerPaintPicker();
+    return;
+  }
+  if(e.target.closest&&e.target.closest('[data-tstart]')){
+    const s=SECS[cur];
+    if(!s||s.type!=='exm'||timerStarted(s)) return;
+    if(!timerMinutes(s)){ timerShowNeed(); return; }
+    if(!timerBegin(s)){ timerShowNeed(); return; }
+    renderSection(s.idx); window.scrollTo(0,0);
+  }
+});
+document.addEventListener('input', e=>{
+  const t=e.target;
+  if(!t.matches||!t.matches('[data-tcustom]')) return;
+  const s=SECS[cur];
+  if(!s||(s.type!=='test'&&s.type!=='exm')||timerStarted(s)) return;
+  const raw=String(t.value||'').trim();
+  if(!raw){ timerChoose(s, 0, 'custom'); timerPaintPicker(); return; }
+  const n=timerParseMin(raw);
+  if(!n){
+    timerChoose(s, 0, 'custom');
+    const err=document.querySelector('[data-tdur-err]');
+    if(err){ err.hidden=false; err.textContent='أدخل عدد دقائق صحيحًا من 1 إلى 180.'; }
+    timerPaintPicker();
+    const err2=document.querySelector('[data-tdur-err]'); if(err2) err2.hidden=false;
+    return;
+  }
+  timerChoose(s, n, 'custom');
+  timerPaintPicker();
+});
+document.addEventListener('beforeinput', e=>{
+  if(!timerBlocksAnswers()) return;
+  const t=e.target; if(!t||!t.closest||!t.closest('.tq.is-locked, .texam.is-locked')) return;
+  if(t.tagName==='TEXTAREA'||t.tagName==='INPUT'||t.isContentEditable) e.preventDefault();
+}, true);
+document.addEventListener('click', e=>{
+  if(!timerBlocksAnswers()) return;
+  const t=e.target; if(!t||!t.closest) return;
+  if(t.closest('.tq.is-locked button, .texam.is-locked button, .tq.is-locked .opt, .texam.is-locked .opt, .tq.is-locked textarea, .texam.is-locked textarea')){
+    e.preventDefault(); e.stopPropagation();
+  }
+}, true);
+
 // ---------- محرك الاختبار ----------
 let T=null;
 document.addEventListener('toggle',e=>{ if(T && e.target.classList && e.target.classList.contains('txp')) T.txOpen=e.target.open; },true);
@@ -1213,8 +1510,10 @@ function buildTest(s){
   let qs=all.filter(x=>S.lv===1?isAuto(x.it):S.lv===3?!isAuto(x.it):true); if(qs.length<3) qs=all;
   const sv=(S.tp||{})[s.tno+tsfx()];
   if(sv&&Array.isArray(sv.ks)&&sv.ks.length&&sv.ks.every(k=>all[k])){
-    return {s, ex, qs:sv.ks.map(k=>all[k]), i:Math.min(sv.i||0,sv.ks.length-1), marks:sv.marks||[], phase:sv.phase||'q', ans:sv.ans||{}, txOpen:sv.txOpen, sel:null, checked:false, lv:S.lv};
+    let phase=sv.phase||'q'; if(phase==='intro'&&timerStarted(s)) phase='q';
+    return {s, ex, qs:sv.ks.map(k=>all[k]), i:Math.min(sv.i||0,sv.ks.length-1), marks:sv.marks||[], phase, ans:sv.ans||{}, txOpen:sv.txOpen, sel:null, checked:false, lv:S.lv};
   }
+  if(timerStarted(s)) return {s, ex, qs, i:0, marks:[], phase:'q', ans:{}, sel:null, checked:false, lv:S.lv};
   return {s, ex, qs, i:0, marks:[], phase:'intro', ans:{}, sel:null, checked:false, lv:S.lv};
 }
 function exText(ex){
@@ -1235,9 +1534,10 @@ function exText(ex){
 function testHeadHtml(s){ return head(s); }
 function renderTest(s){
   if(!T || T.s!==s) T=buildTest(s);
+  timerSync(s);
   let h=head(s);
   if(T.phase==='intro') h+=tIntro(s);
-  else if(T.phase==='q') h+=tQuestion();
+  else if(T.phase==='q') h+=timerClockHtml(T.s)+tQuestion();
   else h+=tResult();
   if(T.phase!=='q'){ const oi=posOf(s.idx), p=ORDER[oi-1], n=ORDER[oi+1];
     h+='<div class="nav">'+(n?`<button type="button" data-go="${n.idx}">التالي<b>${esc(shortTitle(n.title))}</b></button>`:'<span></span>')+
@@ -1251,6 +1551,7 @@ function tIntro(s){
     ${tlvNote()}<div class="tcov">${s.members.map(mi=>`<span>${esc(shortTitle(SECS[mi].title))}</span>`).join('')}</div>
     <div class="tstats"><div><b>${T.qs.length}</b>سؤالًا</div><div><b>${s.members.length}</b>مفاهيم</div>${r?`<div><b>${r.best}%</b>أفضل نتيجة</div><div><b>${r.n}</b>محاولات</div>`:''}</div>
     <p style="font-size:16px;color:var(--muted)">أسئلة الاختيار تُصحَّح فورًا، وفي الأسئلة المقالية اكتب إجابتك ثم اضغط «صحّح بالذكاء الاصطناعي» ليقيّمها ويشرح لك ملاحظاته، أو قارنها بنفسك بالإجابة النموذجية.</p>
+    ${timerPickerHtml(s)}
     <button type="button" class="tgo" data-tstart>ابدأ الاختبار</button></div>
     <p class="ptext instr" style="margin-top:22px">${rich(T.ex.instruction)}</p>${exText(T.ex)}
     <div style="text-align:center;margin-top:16px"><button type="button" class="tgo" data-tstart>قرأتُ النص، ابدأ الأسئلة</button></div>`;
@@ -1260,7 +1561,7 @@ function tQuestion(){
   let h=`<div class="tbar"><span>السؤال ${T.i+1} من ${n}</span><div class="track"><div class="fill" style="width:${Math.round(T.i*100/n)}%"></div></div></div>`;
   const wide=window.matchMedia('(min-width:1000px)').matches, op=(T.txOpen!=null?T.txOpen:wide);
   h+=`<details class="txp" ${op?'open':''}><summary>📜 نصّ الاختبار: ${esc(T.ex.ttitle)}</summary>${exText(T.ex)}</details>`;
-  h+=`<article class="card item tq"><div class="ihead"><span class="inum">${T.i+1}</span><span class="ctag">${esc(shortTitle(c.title))}</span></div>`+quote(it);
+  h+=`<article class="card item tq${timerIsLocked(T.s)?' is-locked':''}"><div class="ihead"><span class="inum">${T.i+1}</span><span class="ctag">${esc(shortTitle(c.title))}</span></div>`+quote(it);
   it.qs.forEach((q,qi)=>{
     h+='<div class="q">'; if(q.q) h+=`<div class="qt"><span>${rich(q.q)}</span></div>`;
     if(q.mcq){
@@ -1329,24 +1630,25 @@ function tRestore(){ if(!T||T.phase!=='q') return; const a=(T.ans||{})[T.i]; con
 function tClearBar(){ const sv=S.tp[tpk(T.s)]; if(!sv&&T.phase==='intro') return '';
   return `<div class="clrwrap bot" data-tclrwrap><button type="button" class="clrbtn" data-tclear>↺ امسح إجاباتي في هذا الاختبار وأعد المحاولة</button></div>`; }
 const _renderTest=renderTest;
-renderTest=function(s){ _renderTest(s); if(!T) return; if(T.phase==='q') tRestore();
+renderTest=function(s){ _renderTest(s); if(!T) return; if(T.phase==='q') tRestore(); timerApplyDomLock(); timerPlace(); timerArm();
   const m=document.getElementById('main'), bar=tClearBar(); if(bar){ const nav=m.querySelector(':scope > .nav'); if(nav) nav.insertAdjacentHTML('beforebegin',bar); else m.insertAdjacentHTML('beforeend',bar); } };
 const _tMark=tMark; tMark=function(v){ _tMark(v); tCapture(); tSave(); };
 const _tFinish=tFinish; tFinish=function(){ _tFinish(); tSave(); };
-let ttm; document.addEventListener('input',e=>{ if(T&&T.phase==='q'&&e.target.closest&&e.target.closest('.tq')){ clearTimeout(ttm); ttm=setTimeout(()=>{ tCapture(); tSave(); },300); } });
+let ttm; document.addEventListener('input',e=>{ if(T&&T.phase==='q'&&timerIsLocked(T.s)) return; if(T&&T.phase==='q'&&e.target.closest&&e.target.closest('.tq')){ clearTimeout(ttm); ttm=setTimeout(()=>{ tCapture(); tSave(); },300); } });
 document.addEventListener('click',e=>{
   if(!T||SECS[cur]!==T.s) return;
   if(e.target.closest('[data-tclear]')){ const w=e.target.closest('[data-tclrwrap]');
     w.innerHTML=`<span class="clrask">هل تريد مسح كل إجاباتك في هذا الاختبار؟ <button type="button" class="clrbtn danger" data-tclear-yes>نعم، امسح</button> <button type="button" class="clrbtn" data-tclear-no>إلغاء</button></span>`; return; }
   if(e.target.closest('[data-tclear-no]')){ renderTest(T.s); return; }
-  if(e.target.closest('[data-tclear-yes]')){ delete S.tp[tpk(T.s)]; save(); const o=T.txOpen; T=buildTest(T.s); T.txOpen=o; renderTest(T.s); window.scrollTo(0,0);
+  if(e.target.closest('[data-tclear-yes]')){ delete S.tp[tpk(T.s)]; timerClear(T.s); save(); const o=T.txOpen; T=buildTest(T.s); T.txOpen=o; renderTest(T.s); window.scrollTo(0,0);
     showToast('<span>تم مسح إجاباتك في هذا الاختبار. بالتوفيق في المحاولة الجديدة!</span><span class="tacts2"><button type="button" class="tx" data-toast-x>حسنًا</button></span>'); clearTimeout(window.__tt); window.__tt=setTimeout(hideToast,3500); return; }
   setTimeout(()=>{ if(T&&T.phase==='q'){ tCapture(); tSave(); } else if(T&&T.phase==='res') tSave(); },0);
 });
 document.addEventListener('click',e=>{
   if(!T || SECS[cur]!==T.s) return;
-  if(e.target.closest('[data-tstart]')){ T.phase='q'; T.i=0; T.marks=[]; renderTest(T.s); window.scrollTo(0,0); return; }
-  if(e.target.closest('[data-tretry]')){ const o=T.txOpen; if(S.tp) delete S.tp[T.s.tno+tsfx()]; save(); T=buildTest(T.s); T.txOpen=o; T.phase='q'; renderTest(T.s); window.scrollTo(0,0); return; }
+  if(e.target.closest('[data-tstart]')){ if(!timerMinutes(T.s)){ timerShowNeed(); return; } if(!timerBegin(T.s)){ timerShowNeed(); return; } T.phase='q'; T.i=0; T.marks=[]; renderTest(T.s); tSave(); window.scrollTo(0,0); return; }
+  if(e.target.closest('[data-tretry]')){ const o=T.txOpen; if(S.tp) delete S.tp[T.s.tno+tsfx()]; timerClear(T.s); save(); T=buildTest(T.s); T.txOpen=o; T.phase='intro'; renderTest(T.s); window.scrollTo(0,0); return; }
+  if(T.phase==='q'&&timerIsLocked(T.s)&&e.target.closest('[data-tnext],[data-tconfirm],[data-to],[data-tcheck],[data-sg]')) return;
   if(e.target.closest('[data-tnext]')){ if(T.i+1<T.qs.length){ T.i++; renderTest(T.s); window.scrollTo({top:0,behavior:'smooth'}); } else tFinish(); return; }
   const tcf=e.target.closest('[data-tconfirm]'); if(tcf){ const wrap=document.querySelector('.tq .opts');
     if(wrap&&!wrap.classList.contains('locked')&&wrap.dataset.sel){ const key=+wrap.dataset.key, o=+wrap.dataset.sel, op=wrap.querySelector(`[data-to="${o}"]`), fb=wrap.nextElementSibling;
@@ -1428,25 +1730,25 @@ document.addEventListener('click',e=>{
     go(si);
     setTimeout(()=>{ const el=document.getElementById(nid(k)); if(el){ el.scrollIntoView({block:'center',behavior:'smooth'}); const st=el.querySelector('.sticky'); if(st){ st.hidden=false; st.animate([{transform:'scale(1.06) rotate(-2deg)'},{transform:'none'}],{duration:500}); } } },60); return; }
   const tl=e.target.closest('.toc a'); if(tl){ e.preventDefault(); go(+tl.dataset.i); return; }
-  const rv=e.target.closest('.reveal'); if(rv && !rv.hasAttribute('data-tcheck')){
+  const rv=e.target.closest('.reveal'); if(rv && !rv.hasAttribute('data-tcheck')){ if(timerBlocksAnswers()) return;
     const id=rv.dataset.id, box=document.getElementById('ans-'+id), open=box.hidden;
     box.hidden=!open; rv.setAttribute('aria-expanded',open); rv.textContent=open?'إخفاء الإجابة':'أظهر الإجابة النموذجية';
     if(open) markDone(id,true); return; }
-  const op=e.target.closest('.opt'); if(op && !op.hasAttribute('data-to')){
+  const op=e.target.closest('.opt'); if(op && !op.hasAttribute('data-to')){ if(timerBlocksAnswers()) return;
     const wrap=op.closest('.opts'); if(wrap.classList.contains('locked')||op.classList.contains('wrong')) return;
     wrap.querySelectorAll('.opt.sel').forEach(x=>x.classList.remove('sel')); op.classList.add('sel'); wrap.dataset.sel=op.dataset.o;
     const fb=wrap.nextElementSibling; if(fb&&fb.classList.contains('fb')){ fb.className='fb'; fb.textContent=''; }
     const cb=document.querySelector(`[data-confirm="${wrap.dataset.id}:${wrap.dataset.qi}"]`); if(cb) cb.disabled=false;
     return; }
-  const cfm=e.target.closest('[data-confirm]'); if(cfm){ confirmMcq(cfm); return; }
+  const cfm=e.target.closest('[data-confirm]'); if(cfm){ if(timerBlocksAnswers()) return; confirmMcq(cfm); return; }
   if(e.target.closest('#resetBtn')){
     document.getElementById('resetRow').innerHTML='سيُمسح تقدّمك وكل ما كتبته. <button type="button" class="linkbtn" id="resetYes">نعم، امسح</button> <button type="button" class="linkbtn" id="resetNo" style="color:var(--muted)">تراجع</button>'; return; }
-  if(e.target.closest('#resetYes')){ S.done={}; S.txt={}; S.tp={}; save(); renderHome(); return; }
+  if(e.target.closest('#resetYes')){ S.done={}; S.txt={}; S.tp={}; timerClearStudent(); save(); renderHome(); return; }
   if(e.target.closest('#resetNo')){ renderHome(); return; }
 });
 let ntm; document.addEventListener('input',e=>{ const t=e.target; if(t.tagName==='TEXTAREA' && t.dataset.n){ const n=S.notes[t.dataset.n]; if(n){ n.t=t.value; n.ts=Date.now(); }
   clearTimeout(ntm); ntm=setTimeout(()=>{ save(); renderNCount(); const b=document.querySelectorAll(`[data-note="${t.dataset.n}"]`); b.forEach(x=>{ if(!x.classList.contains('has')) x.outerHTML=noteBtn(t.dataset.n); }); },400); } });
-let tmr; document.addEventListener('input',e=>{ const t=e.target; if(t.tagName==='TEXTAREA' && t.dataset.k){ S.txt[t.dataset.k]=t.value; clearTimeout(tmr); tmr=setTimeout(save,400); } });
+let tmr; document.addEventListener('input',e=>{ const t=e.target; if(t.tagName==='TEXTAREA' && t.dataset.k){ if(timerBlocksAnswers()&&t.closest('.texam,.tq')) return; S.txt[t.dataset.k]=t.value; clearTimeout(tmr); tmr=setTimeout(save,400); } });
 const AIL = (function(){
 const MAX_FIELD = 1800, MAX_QS = 6, MIN_WHY = 12;
 const clip = (v, n = MAX_FIELD) => String(v == null ? '' : v).slice(0, n);
@@ -1763,8 +2065,8 @@ document.addEventListener('click',e=>{
     if(n<tot){ HU[id]=n+1; hb.parentNode.querySelector('.hintlist').insertAdjacentHTML('beforeend',`<div class="hint"><span>تلميح ${n+1}:</span>${rich(reg.it.hints[n])}</div>`); }
     if((HU[id]||0)>=tot){ hb.disabled=true; hb.textContent='انتهت التلميحات'; } else hb.textContent='💡 تلميح آخر ('+(tot-HU[id])+' متبقٍّ)';
     return; }
-  const ab=e.target.closest('[data-ai]'); if(ab){ aiItem(ab); return; }
-  const tb=e.target.closest('[data-taigrade]'); if(tb&&T&&SECS[cur]===T.s){ aiTest(tb); return; }
+  const ab=e.target.closest('[data-ai]'); if(ab){ if(timerBlocksAnswers()) return; aiItem(ab); return; }
+  const tb=e.target.closest('[data-taigrade]'); if(tb&&T&&SECS[cur]===T.s){ if(timerBlocksAnswers()) return; aiTest(tb); return; }
 });
 
 // ================= اختيار من متعدد: تحديد ثم «اعتمد إجابتي» =================
@@ -1800,7 +2102,7 @@ document.addEventListener('click',e=>{
   const no=e.target.closest('[data-clear-no]');
   if(no){ const w=no.closest('.clrwrap'); w.outerHTML=clearBar(SECS[+no.dataset.clearNo],w.classList.contains('bot')?'bot':''); return; }
   const yes=e.target.closest('[data-clear-yes]');
-  if(yes){ const i=+yes.dataset.clearYes, y=window.scrollY; clearPageAnswers(i); renderSection(i); renderMeter(); renderNCount(); window.scrollTo(0,y);
+  if(yes){ const i=+yes.dataset.clearYes, y=window.scrollY; const sec=SECS[i]; if(sec&&sec.type==='exm') timerClear(sec); clearPageAnswers(i); renderSection(i); renderMeter(); renderNCount(); window.scrollTo(0,y);
     showToast('<span>تم مسح إجاباتك في هذه الصفحة. بالتوفيق في المحاولة الجديدة!</span><span class="tacts2"><button type="button" class="tx" data-toast-x>حسنًا</button></span>');
     clearTimeout(window.__tt); window.__tt=setTimeout(hideToast,3500); return; }
 });

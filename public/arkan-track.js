@@ -143,7 +143,7 @@
         : (mode === 'setpin' ? 'حسابك موجود دون رقم سري. عيّن 6 أرقام وتابع.' : 'اكتب اسمك الحقيقي ومدرستك الثانوية، ثم عيّن رقمًا سريًا من 6 أرقام.');
       extra.hidden = mode === 'login';
       forgot.hidden = mode !== 'login';
-      document.getElementById('arkGo').textContent = mode === 'login' ? 'متابعة' : 'ادخل إلى الكتاب';
+      document.getElementById('arkGo').textContent = mode === 'login' ? 'متابعة إلى الفروع' : 'ادخل إلى الفروع';
       E.textContent = '';
     }
     function fieldName() { return document.getElementById('arkRN').value.replace(/\s+/g, ' ').trim(); }
@@ -175,7 +175,7 @@
       var finish = function () {
         try { localStorage.removeItem('arkan-force-pin'); } catch (x) {}
         window.arkanSaveUser(n, sc, GRADE, { consent: true, pinSet: true });
-        location.reload();
+        location.replace('/branches.html');
       };
       var fail = function (r) { btn.disabled = false; submitting = false; E.textContent = window.arkanPin.errMsg(r); };
       if (mode === 'login') {
@@ -242,5 +242,13 @@
     if (g('arkan-idle-locked')) { ev('idle_lock'); try { localStorage.removeItem('arkan-idle-locked'); } catch (x) {} }
     if (window.arkanPin && window.arkanPin.logged()) { ev('session'); onRoute(); flush(false); }
   }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+  function start() {
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+  }
+  if (!window.arkanPin) {
+    var ps = document.createElement('script');
+    ps.src = '/arkan-pin.js?v=191';
+    ps.onload = start;
+    (document.head || document.documentElement).appendChild(ps);
+  } else start();
 })();

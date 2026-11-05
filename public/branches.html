@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, viewport-fit=cover">
+<title>أركان — بوابة الفروع</title><meta name="robots" content="noindex">
+<link rel="manifest" href="./manifest.webmanifest"><link rel="icon" href="./icons/favicon-v5.ico">
+<link href="https://fonts.googleapis.com/css2?family=Reem+Kufi:wght@500;700&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:Amiri,serif;background:#F7F3EA;color:#12343B;min-height:100vh}
+header{background:linear-gradient(160deg,#0B4F53,#0B7C82);color:#fff;text-align:center;padding:34px 16px 28px}
+header h1{font-family:'Reem Kufi',serif;margin:0;font-size:40px;color:#f0d58f}header p{margin:8px 0 0;font-size:19px}
+#who{margin-top:10px;font-size:16px;opacity:.9}
+main{max-width:980px;margin:0 auto;padding:26px 16px 50px}
+main>h2{font-family:'Reem Kufi',serif;text-align:center;color:#0B7C82;font-size:26px;margin:0 0 20px}
+.g{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px}
+.b{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;min-height:290px;text-align:center;text-decoration:none;color:inherit;background:linear-gradient(180deg,#0B4F53,#083c40);border:2px solid #d4a94a;border-radius:999px 999px 12px 12px;padding:70px 16px 20px;box-shadow:inset 0 0 0 6px #083c40,inset 0 0 0 7px rgba(226,180,85,.6);transition:transform .15s;position:relative}.b:before{content:"";position:absolute;top:16px;left:50%;transform:translateX(-50%);width:55%;height:44px;border:2px solid #d4a94a;border-bottom:0;border-radius:999px 999px 0 0}
+a.b:hover{transform:translateY(-3px);border-color:#0B7C82}
+.b h3{font-family:'Reem Kufi',serif;margin:0 0 6px;font-size:24px;color:#f0d58f}.b p{margin:0 0 12px;font-size:18px;color:#ead8bd;flex:1}.e{display:inline-block;margin-top:10px;font-family:'Reem Kufi',serif;padding:7px 20px;border-radius:999px;background:#d4a94a;color:#083c40;font-weight:700}
+.t{display:inline-block;padding:4px 14px;border-radius:999px;font-size:15px;background:#d4a94a;color:#083c40}
+.home{display:block;text-align:center;margin-top:26px;color:#0B7C82;font-size:18px}
+.ark40{background:#0B4F53;color:#fff;border-radius:14px;padding:12px;margin-bottom:18px;text-align:center}.ark40 b{color:#f0d58f;font-family:'Reem Kufi',serif;font-size:20px}.ark40g{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:8px}.ark40g span{background:rgba(255,255,255,.1);border-radius:999px;padding:4px 12px}.ark40g i{font-style:normal;color:#f0d58f;font-weight:700;margin-right:6px}
+</style>
+<link rel="stylesheet" href="./arkan-portal-theme.css?v=4">
+<link rel="stylesheet" href="/arkan-theme.css?v=191"><script src="/arkan-theme.js"></script>
+<script src="./arkan-score.js?v=2"></script>
+</head><body>
+<header><h1>أركان</h1><p>بوابة فروع اللغة العربية — الصف الثاني عشر</p><div id="who"></div></header>
+<main><h2>اختر الفرع الذي تريد الدخول إليه</h2>
+<div id="split"></div>
+<div class="g">
+<a class="b" href="./index.html"><h3>فرع القراءة</h3><p>كتاب القراءة التفاعلي ومعلّمٌ ذكيّ</p><span class="t">متاح الآن</span><span class="e">ادخل الفرع</span></a>
+<a class="b" href="./qawaid.html"><h3>فرع القواعد</h3><p>نحوٌ وصرفٌ وتطبيق: القسم العلمي والقسم الأدبي</p><span class="t">متاح الآن</span><span class="e">ادخل الفرع</span></a>
+<a class="b" href="./qadaya.html"><h3>فرع القضايا</h3><p>القضايا الأدبية: القسم العلمي والقسم الأدبي، مع تصحيح ذكي</p><span class="t">متاح الآن</span><span class="e">ادخل الفرع</span></a>
+<a class="b" href="./writing.html"><h3>فرع الكتابة</h3><p>مقالٌ وتعبيرٌ وخطاب، ومصحّحٌ ذكيّ</p><span class="t">متاح الآن</span><span class="e">ادخل الفرع</span></a>
+<a class="b" href="./hifz.html"><h3>فرع الحفظ</h3><p>النصوص الشعرية المسموعة، مع صفحة تسميع</p><span class="t">متاح الآن</span><span class="e">ادخل الفرع</span></a>
+<a class="b" href="./tadribat.html"><h3>الاختبارات التدريبية</h3><p>اختباراتٌ تدريبيةٌ كاملةٌ على نمط الامتحان</p><span class="t">جديد</span><span class="e">ادخل البوابة</span></a>
+</div>
+<a class="home" href="./account.html">حسابي</a></main>
+<script>
+function arkWho(){try{var u=JSON.parse(localStorage.getItem('arkan_user_v3')||'{}');if(u.name&&u.vf)document.getElementById('who').textContent='مرحبًا '+u.name+' — '+u.school;}catch(e){}}
+if (window.arkanSplitHtml) document.getElementById('split').innerHTML=arkanSplitHtml();
+arkWho();
+addEventListener('storage', arkWho);
+</script>
+<script src="./qa-schools.js?v=191"></script>
+<script src="./arkan-pin.js?v=191"></script>
+<script src="./arkan-auth.js?v=191"></script>
+<script src="./arkan-track.js?v=191"></script>
+</body></html>

@@ -9,7 +9,7 @@
   ['/qa-schools.js', '/arkan-pin.js', '/arkan-auth.js', '/arkan-track.js'].forEach(function (src) {
     if (document.querySelector('script[src^="' + src + '"]')) return;
     var t = document.createElement('script');
-    t.src = src + '?v=190';
+    t.src = src + '?v=191';
     (document.head || document.documentElement).appendChild(t);
   });
 })();

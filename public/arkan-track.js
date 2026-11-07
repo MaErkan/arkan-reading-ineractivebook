@@ -129,7 +129,8 @@
   }, true);
 
   function init() {
-    var legacy = document.getElementById('lk'); if (legacy) legacy.remove();
+    var legacy = document.getElementById('lk');
+    if (legacy && !document.body.hasAttribute('data-arkan-v2')) legacy.remove();
     askName();
     if (g('arkan-idle-locked')) { ev('idle_lock'); try { localStorage.removeItem('arkan-idle-locked'); } catch (x) {} }
     if (window.arkanPin && window.arkanPin.logged()) { ev('session'); onRoute(); flush(false); }

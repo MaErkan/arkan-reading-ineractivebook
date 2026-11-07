@@ -32,3 +32,6 @@ refresh();
 })();
 
 (()=>{const script=document.createElement('script');script.src='tutor-ui.js?v=openrouter-1';script.defer=true;document.head.append(script)})();
+
+/* طبقة التجديد البصرية للكتاب الكامل */
+(()=>{const l=document.createElement('link');l.rel='stylesheet';l.href='refresh.css?v=20261107';(document.body||document.documentElement).append(l);const s=document.createElement('script');s.src='refresh.js?v=20261107';s.defer=true;document.head.append(s)})();

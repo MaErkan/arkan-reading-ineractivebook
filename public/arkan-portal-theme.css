@@ -1,0 +1,20 @@
+/* أركان — هوية البوابات: أبواب تركوازية بزخارف ذهبية */
+:root{--ap-teal:#0B5C61;--ap-teal2:#0A7A7E;--ap-teal-d:#073f43;--ap-gold:#D4A84A;--ap-gold2:#E2B455;--ap-gold-l:#F0D58F;--ap-lantern:#E8A04A;--ap-sand:#EFE6D3;--ap-zellige:#1f4f8a;--ap-rose:#d9487a}
+body{background-color:var(--ap-sand)!important;background-image:radial-gradient(circle at 50% 0,rgba(232,160,74,.18),transparent 55%),url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56'%3E%3Cg fill='none' stroke='%231f4f8a' stroke-opacity='.08' stroke-width='1.2'%3E%3Cpath d='M28 2l7 19 19 7-19 7-7 19-7-19-19-7 19-7z'/%3E%3Ccircle cx='28' cy='28' r='6'/%3E%3C/g%3E%3C/svg%3E")!important}
+header{position:relative;overflow:hidden;background:linear-gradient(180deg,rgba(7,50,58,.72),rgba(11,80,90,.88)),url(./img/mihrab-stone.jpg) center/cover!important;border-bottom:4px double var(--ap-gold);box-shadow:0 6px 24px rgba(232,160,74,.25)}
+header:after{content:"";position:absolute;left:0;right:0;bottom:0;height:10px;background:repeating-linear-gradient(90deg,var(--ap-zellige) 0 10px,#fff 10px 14px,var(--ap-teal2) 14px 24px,#fff 24px 28px);opacity:.75}
+header h1{color:var(--ap-gold-l)!important;text-shadow:0 0 18px rgba(232,160,74,.6),0 2px 3px rgba(0,0,0,.4)}
+main>h2,section.sec h2{color:var(--ap-teal)!important}
+.b{background:linear-gradient(180deg,rgba(7,40,52,.55),rgba(7,48,56,.82) 55%,rgba(5,30,38,.95)),url(./img/mihrab-tile.jpg) center 30%/cover,#0B4F5A!important;border:3px solid var(--ap-gold)!important;border-radius:48% 48% 10px 10px/30% 30% 10px 10px!important;box-shadow:0 0 0 10px #d9c9a6,0 0 0 13px #b9a47c,0 0 0 15px var(--ap-gold),inset 0 0 0 6px rgba(5,30,38,.7),inset 0 0 0 7px var(--ap-gold2),inset 0 -30px 40px rgba(122,24,36,.25),0 18px 30px rgba(40,25,10,.35)!important;margin:16px}
+.b:before{top:10px!important;left:8px!important;right:8px!important;width:auto!important;height:46%!important;transform:none!important;border:0!important;border-radius:0!important;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 120' preserveAspectRatio='none'%3E%3Cpath d='M6 120V70q0-14 14-16q-2-18 16-22q2-18 22-18q10-14 42-14q32 0 42 14q20 0 22 18q18 4 16 22q14 2 14 16v50' fill='none' stroke='%23F0D58F' stroke-width='3'/%3E%3Cpath d='M16 120V74q0-10 10-12q-1-14 13-17q2-14 18-14q9-11 43-11q34 0 43 11q16 0 18 14q14 3 13 17q10 2 10 12v46' fill='none' stroke='%23D4A84A' stroke-width='1.5' stroke-opacity='.7'/%3E%3C/svg%3E") center/100% 100% no-repeat;box-shadow:none!important}
+.b:after{content:"";position:absolute;top:36px;left:50%;transform:translateX(-50%);width:58px;height:58px;border-radius:50%;background:radial-gradient(circle,rgba(240,213,143,.9) 0 4px,transparent 5px),repeating-conic-gradient(from 0deg,rgba(226,180,85,.55) 0 7.5deg,rgba(31,79,138,.35) 7.5deg 15deg);border:2px solid var(--ap-gold);box-shadow:0 0 0 4px rgba(5,30,38,.6),0 0 0 5px var(--ap-gold2),0 0 18px rgba(232,160,74,.45);opacity:.9}
+.b h3{color:var(--ap-gold-l)!important;margin-top:0!important;text-shadow:0 1px 3px rgba(0,0,0,.7)}
+.b p{text-shadow:0 1px 2px rgba(0,0,0,.6)}
+.b:hover{transform:translateY(-3px)}
+.t{background:linear-gradient(180deg,#9b2234,#6e1422)!important;color:var(--ap-gold-l)!important;border:1px solid var(--ap-gold)}
+.e{background:linear-gradient(180deg,var(--ap-gold-l),var(--ap-gold))!important;color:var(--ap-teal-d)!important;box-shadow:0 2px 6px rgba(0,0,0,.25)}
+section.sec{border:3px double var(--ap-gold)!important;box-shadow:0 6px 18px rgba(7,63,67,.08)}
+.rule{border-right-color:var(--ap-teal2)!important}
+.ark40{background:linear-gradient(180deg,var(--ap-teal2),var(--ap-teal-d))!important;border:2px solid var(--ap-gold)}
+.home{color:var(--ap-teal)!important}
+.b{padding-top:118px!important;justify-content:flex-start!important}

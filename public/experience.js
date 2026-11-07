@@ -27,7 +27,6 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-ux]');if(!
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.body.classList.contains('ux-focus')){document.body.classList.remove('ux-focus');$('#uxTools [data-ux="focus"]')?.setAttribute('aria-pressed','false')}});
 window.addEventListener('hashchange',()=>requestAnimationFrame(refresh));
 const skip=document.createElement('a');skip.className='ux-skip';skip.href='#main';skip.textContent='انتقل إلى محتوى الكتاب';skip.onclick=e=>{e.preventDefault();main.tabIndex=-1;main.focus();main.scrollIntoView()};document.body.prepend(skip);
-const input=$('#lkI');if(input){input.setAttribute('aria-describedby','lkE');input.setAttribute('autocapitalize','characters');const label=document.createElement('label');label.className='ux-lock-label';label.htmlFor='lkI';label.textContent='كود فتح الكتاب';input.before(label);const meta=document.createElement('p');meta.className='ux-lock-meta';meta.textContent='الصف الثاني عشر · إعداد محمد أركان';$('#lkF')?.append(meta);$('#lkE')?.setAttribute('role','alert')}
 refresh();
 })();
 

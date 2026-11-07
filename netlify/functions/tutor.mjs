@@ -1,10 +1,11 @@
 // المعلم الذكي — أركان | Netlify Function (v2) | OpenAI
 // المتغيرات المطلوبة في Netlify (Site configuration > Environment variables):
 //   OPENAI_API_KEY  مفتاح OpenAI (يبدأ بـ sk-)
-//   BOOK_CODES      كود/أكواد فتح الكتاب مفصولة بفاصلة، مثال: ABC123,XYZ789
 //   OPENAI_MODEL    (اختياري) الافتراضي gpt-4.1-mini
+// الدخول بهوية الطالب (x-arkan-reg): الاسم والمدرسة والصف.
 
 import { llm } from '../lib/llm.mjs';
+import { readIdentity, identityOk } from '../lib/identity.mjs';
 export const config = { path: '/api/tutor' };
 
 const json = (obj, status = 200) =>
@@ -12,14 +13,6 @@ const json = (obj, status = 200) =>
     status,
     headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' },
   });
-
-// نفس تطبيع الكود في الكتاب: أرقام عربية/فارسية -> لاتينية، قصّ، أحرف كبيرة
-const norm = (s) =>
-  String(s || '')
-    .replace(/[٠-٩]/g, (d) => '٠١٢٣٤٥٦٧٨٩'.indexOf(d))
-    .replace(/[۰-۹]/g, (d) => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d))
-    .trim()
-    .toUpperCase();
 
 const clip = (v, n) => String(v == null ? '' : v).slice(0, n);
 
@@ -55,13 +48,8 @@ export default async (req) => {
   if (req.method !== 'POST') return json({ error: 'method' }, 405);
 
   const P = llm(); const key = P && P.key;
-  const codes = (process.env.BOOK_CODES || '').split(',').map(norm).filter(Boolean);
-  if (!codes.length) return json({ error: 'not_configured' }, 503);
   if (!key) return json({ error: 'cloud_not_configured' }, 503);
-
-  let code = '';
-  try { code = norm(decodeURIComponent(req.headers.get('x-book-code') || '')); } catch { code = ''; }
-  if (!code || !codes.includes(code)) return json({ error: 'forbidden' }, 403);
+  if (!identityOk(readIdentity(req))) return json({ error: 'forbidden' }, 403);
 
   const ip = (req.headers.get('x-nf-client-connection-ip') || req.headers.get('x-forwarded-for') || 'x').split(',')[0].trim();
   if (limited(ip)) return json({ error: 'rate_limited' }, 429);

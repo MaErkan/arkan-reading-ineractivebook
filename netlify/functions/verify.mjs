@@ -9,7 +9,7 @@ const actNorm = (s) => String(s || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
 const RX = /^[^\s@<>]+@[^\s@<>]+\.[a-z]{2,}$/i;
 const TTL = 10 * 60_000, COOL = 60_000, MAX_SEND_H = 5, MAX_TRIES = 5;
 const sha = (s) => createHash('sha256').update(s).digest('hex');
-const salt = () => process.env.OTP_SECRET || process.env.BOOK_CODES || process.env.BOOK_CODE || 'arkan';
+const salt = () => process.env.OTP_SECRET || 'arkan';
 export function mailMode() {
   if (process.env.RESEND_API_KEY) return 'resend';
   if (process.env.BREVO_API_KEY) return 'brevo';
@@ -56,9 +56,6 @@ export default async (req) => {
   const ip = (req.headers.get('x-nf-client-connection-ip') || req.headers.get('x-forwarded-for') || 'x').split(',')[0].trim();
   if (limited(ip, 15)) return json({ error: 'rate_limited' }, 429);
   let p; try { p = JSON.parse(await req.text()); } catch { return json({ error: 'bad_request' }, 400); }
-  const codes = String(process.env.BOOK_CODES || process.env.BOOK_CODE || '').split(',').map(norm).filter(Boolean);
-  const bc = norm(p && p.code);
-  if (!bc || (codes.length && !codes.includes(bc))) return json({ error: 'forbidden' }, 403);
   const email = clip(p.email, 80).trim().toLowerCase();
   const did = clip(p.did, 40).replace(/[^\w-]/g, '');
   if (!RX.test(email) || !did) return json({ error: 'bad_email' }, 400);

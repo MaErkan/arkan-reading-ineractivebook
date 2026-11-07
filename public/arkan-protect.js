@@ -5,9 +5,6 @@
   if (window.__arkanProtect) return;
   window.__arkanProtect = true;
   var OWNER = '© أركان التفاعلي في القراءة — محمد أركان';
-  // ===== إعدادات يعدّلها صاحب الكتاب =====
-  // طلب كلمة المرور يتم عبر بوت أركان على تيليجرام (بموافقة صاحب الكتاب)
-  var BOT_URL = 'https://t.me/smart_arkanBot';
   var IDLE_LOCK_MS = 5 * 60 * 1000; // قفل تلقائي بعد 5 دقائق بلا نشاط
   var UNLOCK_KEY = 'arkan-unlock-v2', ACT_KEY = 'arkan-last-active';
 
@@ -22,7 +19,7 @@
     'font:700 16px sans-serif;color:#000;display:flex;flex-wrap:wrap;align-content:flex-start}' +
     '#wm span{width:260px;padding:38px 0;transform:rotate(-24deg);white-space:nowrap;text-align:center}' +
     '#cover{position:fixed;inset:0;background:#000;z-index:2147483646;display:none}' +
-    'html.arkan-hide body>*:not(#cover):not(#lk){visibility:hidden!important}' +
+    'html.arkan-hide body>*:not(#cover):not(#arkReg){visibility:hidden!important}' +
     'img,video,canvas{-webkit-touch-callout:none;pointer-events:auto}' +
     '#lkC{margin-top:12px;font-size:14.5px;font-weight:700;color:#4B6A6D}#lkC a{color:#0B7C82;text-decoration:underline}';
   (document.head || document.documentElement).appendChild(css);
@@ -30,9 +27,9 @@
   // اسم/بريد الطالب من localStorage — يُعامل كنص فقط (لا innerHTML) لمنع XSS
   function who() {
     try {
-      var u = JSON.parse(localStorage.getItem('arkan_user_v2') || '{}') || {};
+      var u = JSON.parse(localStorage.getItem('arkan_user_v3') || '{}') || {};
       var n = typeof u.name === 'string' ? u.name : '';
-      var e = typeof u.email === 'string' ? u.email : '';
+      var e = typeof u.school === 'string' ? u.school : '';
       return (n + ' ' + e).replace(/[\u0000-\u001f\u007f]/g, '').slice(0, 120).trim();
     } catch (x) { return ''; }
   }
@@ -40,9 +37,13 @@
     var old = document.getElementById('wm'); if (old) old.remove();
     var d = document.createElement('div'); d.id = 'wm';
     d.setAttribute('aria-hidden', 'true');
+    d.setAttribute('role', 'presentation');
+    try { d.inert = true; } catch (e) {}
     var t = (who() + ' ' + OWNER).trim();
-    for (var i = 0; i < 120; i++) {
+    for (var i = 0; i < 100; i++) {
       var s = document.createElement('span');
+      s.setAttribute('aria-hidden', 'true');
+      s.setAttribute('role', 'presentation');
       s.textContent = t;
       d.appendChild(s);
     }
@@ -68,11 +69,17 @@
   }
 
   // ===== القفل التلقائي بعد الخمول =====
-  function unlocked() { return !document.getElementById('lk'); }
+  function unlocked() { return document.documentElement.dataset.arkanOpen === '1'; }
   function stamp() { try { localStorage.setItem(ACT_KEY, String(Date.now())); } catch (x) {} }
   function lastActive() { try { return +localStorage.getItem(ACT_KEY) || 0; } catch (x) { return 0; } }
   function lockNow() {
-    try { localStorage.removeItem(UNLOCK_KEY); localStorage.removeItem(ACT_KEY); localStorage.setItem('arkan-idle-locked', '1'); } catch (x) {}
+    try {
+      localStorage.removeItem(UNLOCK_KEY);
+      localStorage.removeItem('arkan_session_v1');
+      localStorage.removeItem(ACT_KEY);
+      localStorage.setItem('arkan-idle-locked', '1');
+      localStorage.setItem('arkan-force-pin', String(Date.now()));
+    } catch (x) {}
     cover(true);
     location.reload();
   }
@@ -94,20 +101,9 @@
   });
   setInterval(checkIdle, 15000);
   // تبويب آخر قفل الكتاب
-  window.addEventListener('storage', function (e) { if (e.key === UNLOCK_KEY && !e.newValue && unlocked()) location.reload(); });
-
-  // سطر التواصل مع صاحب الكتاب في شاشة كلمة المرور
-  function contactLine() {
-    var f = document.getElementById('lkF');
-    if (!f || document.getElementById('lkC')) return;
-    var d = document.createElement('div'); d.id = 'lkC';
-    d.appendChild(document.createTextNode('نسيت كلمة المرور؟ '));
-    var a = document.createElement('a');
-    a.href = BOT_URL; a.target = '_blank'; a.rel = 'noopener';
-    a.textContent = 'اطلب كلمة المرور من بوت أركان على تيليجرام';
-    d.appendChild(a);
-    f.appendChild(d);
-  }
+  window.addEventListener('storage', function (e) {
+    if ((e.key === 'arkan_session_v1' || e.key === 'arkan-force-pin') && unlocked()) location.reload();
+  });
 
   function init() {
     if (!document.getElementById('cover')) {
@@ -115,7 +111,6 @@
       document.body.appendChild(c);
     }
     watermark();
-    contactLine();
     checkIdle();
     // إعادة بناء العلامة لو حذفها أحد من أدوات المتصفح
     new MutationObserver(function () {
@@ -123,7 +118,7 @@
       if (!document.getElementById('cover')) { var c = document.createElement('div'); c.id = 'cover'; document.body.appendChild(c); }
     }).observe(document.body, { childList: true });
     // تحديث العلامة عند تسجيل الدخول في تبويب آخر
-    window.addEventListener('storage', function (e) { if (e.key === 'arkan_user_v2') watermark(); });
+    window.addEventListener('storage', function (e) { if (e.key === 'arkan_user_v3') watermark(); });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();

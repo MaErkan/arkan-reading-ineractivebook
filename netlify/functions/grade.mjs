@@ -1,19 +1,17 @@
 // التصحيح الذكي — أركان | Netlify Function (v2) | OpenAI
-// المتغيرات: OPENAI_API_KEY + BOOK_CODES ، و OPENAI_MODEL (اختياري)
+// المتغيرات: OPENAI_API_KEY ، و OPENAI_MODEL (اختياري). الدخول بهوية الطالب المسجّل.
 import * as AIL from '../lib/ail.mjs';
 import { llm } from '../lib/llm.mjs';
+import { readIdentity, identityOk } from '../lib/identity.mjs';
 export const config = { path: '/api/grade' };
 const json = (o, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' } });
-const norm = (s) => String(s || '').replace(/[٠-٩]/g, (d) => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[۰-۹]/g, (d) => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).trim().toUpperCase();
 const hits = new Map();
 function limited(ip) { const now = Date.now(); const a = (hits.get(ip) || []).filter((t) => now - t < 60000); a.push(now); hits.set(ip, a); return a.length > 15; }
 export default async (req) => {
   if (req.method !== 'POST') return json({ error: 'method' }, 405);
   const P = llm(); const key = P && P.key;
-  const codes = String(process.env.BOOK_CODES || process.env.BOOK_CODE || '').split(',').map(norm).filter(Boolean);
-  if (!codes.length || !key) return json({ error: 'not_configured' }, 503);
-  let code = ''; try { code = norm(decodeURIComponent(req.headers.get('x-book-code') || '')); } catch {}
-  if (!code || !codes.includes(code)) return json({ error: 'forbidden' }, 403);
+  if (!key) return json({ error: 'not_configured' }, 503);
+  if (!identityOk(readIdentity(req))) return json({ error: 'forbidden' }, 403);
   const ip = (req.headers.get('x-nf-client-connection-ip') || req.headers.get('x-forwarded-for') || 'x').split(',')[0].trim();
   if (limited(ip)) return json({ error: 'rate_limited' }, 429);
   let p; try { p = await req.json(); } catch { return json({ error: 'bad_request' }, 400); }

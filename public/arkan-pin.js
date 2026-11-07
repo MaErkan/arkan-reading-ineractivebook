@@ -63,6 +63,7 @@
   }
   window.arkanPin = {
     did: did,
+    digits: function (v) { return String(v || '').replace(/[٠-٩]/g, function (c) { return '٠١٢٣٤٥٦٧٨٩'.indexOf(c); }).replace(/[۰-۹]/g, function (c) { return '۰۱۲۳۴۵۶۷۸۹'.indexOf(c); }).replace(/\D/g, ''); },
     user: user,
     restoreBridge: restoreBridge,
     logged: function () {

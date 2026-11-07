@@ -1,4 +1,4 @@
-/ /v2.html 200!
+/ /welcome.html 200!
 /home.html /v2.html 302!
 /branches.html /v2.html 302!
 /index.html /v2.html 302!

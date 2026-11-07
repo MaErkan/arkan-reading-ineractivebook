@@ -132,13 +132,8 @@ details.rd summary{padding:12px 16px;font-weight:800;cursor:pointer;color:var(--
 @media print{body{display:none}}
 </style>
 </head>
-<body data-arkan-v2>
-<div id="lk" role="dialog" aria-modal="true" aria-labelledby="lkT"><form class="bx" id="lkF" autocomplete="off">
-  <div class="lg">أ</div><h1 id="lkT">أركان التفاعلي في القراءة</h1><p>أدخل كود الفتح للدخول إلى الكتاب</p>
-  <input id="lkI" autocapitalize="off" spellcheck="false" placeholder="••••••" aria-label="كود الفتح">
-  <button id="lkB" class="btn" type="submit">افتح الكتاب</button><div id="lkE" aria-live="polite"></div>
-</form></div>
-<div id="app" hidden>
+<body>
+<div id="app">
   <header class="hd"><div class="hd-in">
     <div class="logo" aria-hidden="true">أ</div>
     <div class="brand">أركان التفاعلي في القراءة<small>الصف الثاني عشر · تعلّم وتدرّب وتقدّم</small></div>
@@ -150,8 +145,6 @@ details.rd summary{padding:12px 16px;font-weight:800;cursor:pointer;color:var(--
   <main id="v" class="view" aria-live="polite"></main>
 </div>
 <div id="toast" role="status"></div><canvas id="cf" aria-hidden="true"></canvas>
-<script src="/arkan-pin.js?v=20261107-full"></script>
-<script src="/arkan-track.js?v=20261107-full"></script>
 <script src="arkan-protect.js"></script>
 <script>
 (()=>{'use strict';
@@ -160,7 +153,7 @@ const esc=t=>String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').rep
 const rich=t=>esc(t).replace(/\[\[(.+?)\]\]/g,'<u class="uw">$1</u>');
 const plain=t=>String(t||'').replace(/\[\[|\]\]/g,'');
 const L=['أ','ب','ج','د','هـ'];
-const CK='arkan-unlock-v2',SK='arkan2-v1';
+const SK='arkan2-v1';
 const strip=t=>String(t||'').replace(/[\u064B-\u0652\u0670\u0640]/g,'');
 const short=t=>{const s=String(t||'').trim();const c=s.split(/\s[–—-]\s|\s[(（]/)[0].trim();return c.length>=6?c:s};
 const LV=[{n:1,name:'تأسيس',ic:'🌱',d:'تلميحات وخطوات'},{n:2,name:'متوسط',ic:'🌿',d:'نمط الاختبار'},{n:3,name:'متقدم',ic:'🌳',d:'تحليل بلا تلميحات'}];
@@ -360,22 +353,17 @@ $('#snd').onclick=()=>{S.snd=!S.snd;save();head();if(S.snd)sClick()};
 function theme(){const d=S.theme?S.theme==='dark':matchMedia('(prefers-color-scheme:dark)').matches;document.documentElement.dataset.theme=d?'dark':'light';$('#thm').textContent=d?'☀️':'🌙'}
 $('#thm').onclick=()=>{S.theme=document.documentElement.dataset.theme==='dark'?'light':'dark';save();theme()};
 
-/* ---------- فتح الكتاب (نفس تشفير الكتاب الحالي) ---------- */
-const b64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
-const norm=s=>String(s||'').replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[۰-۹]/g,d=>'۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).trim().toUpperCase();
-let BLOB=null;
-async function blob(){if(BLOB)return BLOB;const r=await fetch('index.html',{cache:'force-cache'});const t=await r.text();const m=t.match(/<script type="application\/json" id="data">([\s\S]*?)<\/script>/);if(!m)throw new Error('data');return BLOB=JSON.parse(m[1])}
-async function tryCode(code){const B=await blob();
-  const k0=await crypto.subtle.importKey('raw',new TextEncoder().encode(norm(code)),'PBKDF2',false,['deriveKey']);
-  const k=await crypto.subtle.deriveKey({name:'PBKDF2',salt:b64(B.s),iterations:B.n,hash:'SHA-256'},k0,{name:'AES-GCM',length:256},false,['decrypt']);
-  return JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:b64(B.i)},k,b64(B.c))))}
-function openBook(raw,code){try{localStorage.setItem(CK,norm(code))}catch(e){}$('#lk').remove();$('#app').hidden=false;build(raw);theme();head();route()}
-$('#lkF').addEventListener('submit',async e=>{e.preventDefault();const c=$('#lkI').value,er=$('#lkE'),b=$('#lkB');if(!norm(c)){er.textContent='اكتب الكود أولًا';return}
-  b.disabled=true;b.textContent='جارٍ التحقق…';er.textContent='';
-  try{openBook(await tryCode(c),c)}catch(err){b.disabled=false;b.textContent='افتح الكتاب';er.textContent='الكود غير صحيح، حاول مرة أخرى';const bx=$('#lk .bx');bx.classList.remove('shake');void bx.offsetWidth;bx.classList.add('shake');$('#lkI').select()}});
-(async()=>{theme();let s=null;try{s=localStorage.getItem(CK)}catch(e){}
-  if(s){try{openBook(await tryCode(s),s);return}catch(e){try{localStorage.removeItem(CK)}catch(_){}}}
-  $('#lkI').focus()})();
+/* ---------- فتح الكتاب مباشرة دون تسجيل أو كود ---------- */
+(async()=>{
+  theme();
+  try{
+    const r=await fetch('/book-data.json',{cache:'force-cache'});
+    if(!r.ok)throw new Error('book');
+    build(await r.json());head();route();
+  }catch(e){
+    show('<div class="card sum"><h2>تعذّر تحميل الكتاب</h2><p>تحقق من اتصالك بالإنترنت ثم أعد تحميل الصفحة.</p></div>');
+  }
+})();
 })();
 </script>
 <script src="/tutor-ui.js?v=openrouter-1" defer></script>

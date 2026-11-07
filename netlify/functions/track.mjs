@@ -23,6 +23,7 @@ export default async (req) => {
   for (const e of evs) {
     const ts = Math.min(+e.ts || now, now); const sec = clip(e.sec, 90), item = clip(e.item, 10), q = clip(e.q, 140);
     u.last = Math.max(u.last || 0, ts);
+    { const d = new Date(ts).toISOString().slice(0, 10); const ds = u.days || (u.days = {}); ds[d] = (ds[d] || 0) + 1; const ks = Object.keys(ds); if (ks.length > 120) delete ds[ks.sort()[0]]; }
     switch (e.t) {
       case 'session': u.sessions++; break;
       case 'unlock': u.unlocks++; break;
@@ -31,6 +32,7 @@ export default async (req) => {
       case 'screenshot': (u.shots || (u.shots = [])).push({ kind: clip(e.kind, 20), sec, ts }); if (u.shots.length > 100) u.shots.shift(); break;
       case 'open': if (sec) { const o = u.opens[sec] || (u.opens[sec] = { n: 0 }); o.n++; o.ts = ts; if (Object.keys(u.opens).length > 120) delete u.opens[sec]; } break;
       case 'mcq': case 'test_q': case 'self_grade':
+        if (sec) { const x = (u.secs || (u.secs = {}))[sec] || (u.secs[sec] = { r: 0, w: 0 }); if (e.ok) x.r++; else x.w++; if (Object.keys(u.secs).length > 150) delete u.secs[sec]; }
         if (e.ok) u.right++; else { u.wrong++; u.errs.push({ sec, item, q, t: e.t, ts }); if (u.errs.length > 300) u.errs.splice(0, u.errs.length - 300); }
         break;
       case 'test_done': u.tests.push({ sec, pc: Math.max(0, Math.min(100, +e.pc || 0)), ts }); if (u.tests.length > 100) u.tests.shift(); break;

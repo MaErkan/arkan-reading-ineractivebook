@@ -1,8 +1,9 @@
-/* تسجيل الطالب باسمه + متابعة الاستخدام لصاحب الكتاب (أركان). لا يغيّر سلوك الكتاب. */
+/* تسجيل الطالب بالاسم والمدرسة والصف والرقم السري، ثم متابعة الاستخدام. */
 (function () {
   'use strict';
   if (window.__arkanTrack) return; window.__arkanTrack = true;
-  var UK = 'arkan_user_v2', QK = 'arkan-trackq-v2', DK = 'arkan-did-v2', CK = 'arkan-unlock-v2';
+  var UK = 'arkan_user_v3', QK = 'arkan-trackq-v2', DK = 'arkan-did-v2';
+  var GRADE = 'الصف الثاني عشر';
   function g(k) { try { return localStorage.getItem(k); } catch (x) { return null; } }
   function s(k, v) { try { localStorage.setItem(k, v); } catch (x) {} }
   function user() { try { return JSON.parse(g(UK) || '{}') || {}; } catch (x) { return {}; } }
@@ -12,19 +13,18 @@
   function nudge() {
     if (nudged) return; nudged = true;
     var b = document.createElement('div'); b.setAttribute('role', 'status');
-    b.textContent = '💬 ناقش أغلاطك مع المعلم الذكي من الزر 🎓';
-    b.style.cssText = 'position:fixed;bottom:84px;left:50%;transform:translateX(-50%);z-index:2147483640;background:#0B7C82;color:#fff;padding:10px 14px;border-radius:12px;font-size:14px;direction:rtl;box-shadow:0 4px 16px rgba(0,0,0,.25);max-width:92%;cursor:pointer';
-    function openT() { var t = document.getElementById('arkanTutor'), k = document.getElementById('arkanTutorBtn'); if (t && t.hidden && k) k.click(); else if (t) t.hidden = false; b.remove(); }
-    b.onclick = openT;
+    b.textContent = '💬 ناقش أخطاءك مع المعلم الذكي عبر الزر 🎓';
+    b.style.cssText = 'position:fixed;bottom:84px;left:50%;transform:translateX(-50%);z-index:40;background:#0B7C82;color:#fff;padding:10px 14px;border-radius:12px;font-size:14px;direction:rtl;box-shadow:0 4px 16px rgba(0,0,0,.25);max-width:92%;cursor:pointer';
+    b.onclick = function () { var t = document.getElementById('arkanTutor'), k = document.getElementById('arkanTutorBtn'); if (t && t.hidden && k) k.click(); else if (t) t.hidden = false; b.remove(); };
     document.body.appendChild(b); setTimeout(function () { b.remove(); }, 10000);
   }
   function ev(t, o) { var e = o || {}; if (e.ok === false || (t === 'test_done' && e.pc < 70)) setTimeout(nudge, 1500); e.t = t; e.ts = Date.now(); Q.push(e); if (Q.length > 400) Q.splice(0, Q.length - 400); s(QK, JSON.stringify(Q)); }
   var busy = false;
   function flush(beacon) {
-    var u = user(), code = g(CK);
-    if (!Q.length || !u.name || !u.email || !code || busy) return;
+    var u = user();
+    if (!Q.length || !u.name || !u.school || !u.grade || !u.vf || busy) return;
     var batch = Q.slice(0, 80);
-    var body = JSON.stringify({ gen: 2, did: did, name: u.name, email: u.email || '', phone: u.phone || '', code: code, ev: batch });
+    var body = JSON.stringify({ gen: 3, did: did, name: u.name, school: u.school, grade: u.grade, ev: batch });
     var done = function () { Q.splice(0, batch.length); s(QK, JSON.stringify(Q)); };
     if (beacon && navigator.sendBeacon) { if (navigator.sendBeacon('/api/track', new Blob([body], { type: 'text/plain' }))) done(); return; }
     busy = true;
@@ -35,94 +35,65 @@
   setInterval(function () { flush(false); }, 15000);
   document.addEventListener('visibilitychange', function () { if (document.hidden) flush(true); });
   window.addEventListener('pagehide', function () { flush(true); });
-
+  window.addEventListener('arkan-level', function (e) { var r = e.detail || {}; ev('level_done', { sec: r.sec || secTitle(), lv: r.lv, pc: r.pc }); setTimeout(function () { flush(false); }, 900); });
   window.addEventListener('arkan-shot', function (e) { ev('screenshot', { sec: secTitle(), kind: (e.detail && e.detail.kind) || '' }); setTimeout(function () { flush(false); }, 600); });
 
-  // ===== التسجيل بالاسم (إلزامي) =====
+  function nz(x) {
+    return String(x || '').toLowerCase().replace(/[\u064B-\u065F\u0670\u0640]/g, '').replace(/[أإآٱ]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه').replace(/ؤ/g, 'و').replace(/ئ/g, 'ي')
+      .replace(/[^\u0621-\u064Aa-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim()
+      .split(' ').filter(function (w) { return w !== 'مدرسه' && w !== 'school'; }).map(function (w) { return w.length > 3 && w.indexOf('ال') === 0 ? w.slice(2) : w; }).join(' ');
+  }
+  var SCH = {}; (window.ARKAN_QA_SCHOOLS || []).forEach(function (n) { SCH[nz(n)] = n; });
+  var BAD = ['test', 'tester', 'testing', 'asdf', 'qwerty', 'xxx', 'admin', 'user', 'fake', 'name', 'student', 'none', 'null', 'abc', 'طالب', 'طالبه', 'اسم', 'الاسم', 'وهمي', 'تجريبي', 'تجربه', 'تست', 'مستخدم', 'لا يوجد', 'بدون', 'فلان', 'علان', 'مجهول', 'اختبار'];
+  function nameErr(n) {
+    if (n.length < 5 || n.split(' ').length < 2) return 'اكتب اسمك الحقيقي الكامل (اسمك واسم أبيك على الأقل)';
+    var letters = n.replace(/[\s\-']/g, ''), ar = (letters.match(/[\u0621-\u064A]/g) || []).length;
+    if (/[0-9٠-٩@#$%^&*_=+<>\/\\|!?.,;:()\[\]{}~`"]/.test(n)) return 'يجب أن يتكوّن الاسم من حروف فقط، دون أرقام أو رموز';
+    if (ar < letters.length * 0.8) return 'اكتب اسمك الحقيقي بالعربي (كما هو في البطاقة الشخصية)';
+    if (/(.)\1\1/.test(letters)) return 'يبدو أن هذا الاسم غير حقيقي؛ يُرجى كتابة اسمك الصحيح';
+    var w = nz(n).split(' '), parts = w.filter(function (x) { return ['بن', 'بنت', 'ابن', 'ال', 'ابو', 'ام'].indexOf(x) < 0; });
+    for (var i = 0; i < BAD.length; i++) { var b = nz(BAD[i]); if (w.indexOf(b) >= 0 || nz(n) === b) return 'هذا الاسم وهمي أو تجريبي؛ يُرجى كتابة اسمك الحقيقي الكامل'; }
+    if (parts.length < 2 || parts.some(function (x) { return x.length < 2; })) return 'اكتب اسمك الحقيقي الكامل (اسمك واسم أبيك على الأقل)';
+    return '';
+  }
+  function schoolLooksReal(raw) {
+    if (raw.length < 4 || raw.length > 90) return false;
+    if (!/[A-Za-z\u0621-\u064A]/.test(raw)) return false;
+    if (/(.)\1{4,}/.test(raw.replace(/\s/g, ''))) return false;
+    var n = nz(raw);
+    if (!n || n.length < 3) return false;
+    if (BAD.indexOf(n) >= 0 || n === 'مدرسه' || n === 'school') return false;
+    return true;
+  }
+  function acceptSchool(v) {
+    var raw = String(v || '').replace(/\s+/g, ' ').trim();
+    if (!raw) return '';
+    if (SCH[nz(raw)]) return SCH[nz(raw)];
+    if (!schoolLooksReal(raw)) return '';
+    return raw;
+  }
+  window.arkanNameErr = nameErr;
+  window.arkanSchoolOk = acceptSchool;
+  window.arkanSaveUser = function (n, sc, gr, opt) {
+    opt = opt || {};
+    var prev = user(), o = Object.assign({}, prev, { name: n, school: sc, grade: gr, vf: true, at: Date.now() });
+    o.pinSet = !!opt.pinSet || (!!prev.pinSet && prev.name === n && prev.school === sc && prev.grade === gr);
+    if (opt.consent) { o.consent = true; o.consentAt = prev.consentAt || Date.now(); }
+    s(UK, JSON.stringify(o));
+    ev(opt.evt || 'register', { sec: sc, item: gr });
+    // Never block login/register UI on analytics — caller may pass skipFlush:true and beacon later.
+    if (!opt.skipFlush) flush(!!opt.beacon);
+    try { window.dispatchEvent(new StorageEvent('storage', { key: UK })); } catch (x) {}
+  };
+  window.arkanUser = user;
+
+  function digits(v) { return window.arkanPin ? window.arkanPin.digits(v) : String(v || '').replace(/\D/g, ''); }
+
   function askName() {
-    var cu = user(); if ((cu.name && cu.email) || document.getElementById('arkReg')) return;
-    var st = document.createElement('style');
-    st.textContent = '#arkReg{position:fixed;inset:0;z-index:2147483645;background:rgba(10,40,42,.86);display:flex;align-items:center;justify-content:center;padding:18px;font-family:inherit}' +
-      '#arkReg form{background:#fff;border-radius:18px;max-width:380px;width:100%;padding:22px;direction:rtl;text-align:right;box-shadow:0 10px 40px rgba(0,0,0,.3)}' +
-      '#arkReg h3{margin:0 0 6px;color:#0B7C82;font-size:20px}#arkReg p{margin:0 0 14px;color:#4B6A6D;font-size:14px}' +
-      '#arkReg input{width:100%;box-sizing:border-box;padding:12px;margin:0 0 10px;border:1.5px solid #cfe0e0;border-radius:10px;font-size:16px;user-select:text;-webkit-user-select:text}' +
-      '#arkReg button{width:100%;padding:12px;border:0;border-radius:10px;background:#0B7C82;color:#fff;font-size:17px;font-weight:700}#arkReg .e{color:#b3261e;font-size:13px;min-height:18px}';
-    document.head.appendChild(st);
-    var d = document.createElement('div'); d.id = 'arkReg';
-    d.innerHTML = '<form><h3>سجّل بياناتك</h3><p>اكتب اسمك الحقيقي الكامل وإيميلك ورقم جوالك ليتابع معلمك مستواك في الكتاب.</p>' +
-      '<input id="arkRN" autocomplete="name" placeholder="الاسم الحقيقي الكامل" maxlength="60" required>' +
-      '<input id="arkRM" type="email" inputmode="email" autocomplete="email" dir="ltr" placeholder="البريد الإلكتروني (إلزامي)" maxlength="80" required>' +
-      '<input id="arkRP" type="tel" inputmode="tel" dir="ltr" autocomplete="tel" placeholder="رقم الجوال (إلزامي) مثال: +974 5xxxxxxx" maxlength="20" required>' +
-      '<div class="e" id="arkRE"></div><button type="submit">متابعة</button></form>';
-    document.body.appendChild(d);
-    d.querySelector('form').addEventListener('submit', function (e) {
-      e.preventDefault();
-      var n = document.getElementById('arkRN').value.replace(/\s+/g, ' ').trim();
-      if (n.split(' ').length < 2 || n.length < 5) { document.getElementById('arkRE').textContent = 'اكتب اسمك الكامل (الاسم واسم الأب على الأقل)'; return; }
-      var m = document.getElementById('arkRM').value.trim().toLowerCase();
-      if (!/^[^\s@<>]+@[^\s@<>]+\.[a-z]{2,}$/i.test(m)) { document.getElementById('arkRE').textContent = 'اكتب إيميلك الصحيح (مثال: name@gmail.com)'; return; }
-      var p = document.getElementById('arkRP').value.replace(/[٠-٩]/g, function (c) { return '٠١٢٣٤٥٦٧٨٩'.indexOf(c); }).trim();
-      p = (p.charAt(0) === '+' ? '+' : '') + p.replace(/\D/g, ''); if (p.indexOf('00') === 0) p = '+' + p.slice(2);
-      if (p.replace(/\D/g, '').length < 8 || p.replace(/\D/g, '').length > 15) { document.getElementById('arkRE').textContent = 'اكتب رقم جوالك الصحيح مع كود الدولة (مثال: +97455123456)'; return; }
-      s(UK, JSON.stringify({ name: n, email: m, phone: p })); d.remove();
-      ev('register'); flush(false); ensureVerified();
-      try { window.dispatchEvent(new StorageEvent('storage', { key: UK })); } catch (x) {}
-    });
-    if (cu.name) document.getElementById('arkRN').value = cu.name;
-    if (cu.phone) document.getElementById('arkRP').value = cu.phone;
-    setTimeout(function () { var i = document.getElementById(cu.name ? 'arkRM' : 'arkRN'); if (i) i.focus(); }, 50);
+    if(window.arkanPin && window.arkanPin.logged())return;
+    if(/\/(branches|home|account)\.html$/.test(location.pathname))return;
+    location.replace('/branches.html?next='+encodeURIComponent(location.pathname+location.search+location.hash));
   }
-
-
-  // ===== تفعيل الإيميل بكود (إلزامي لما يكون مزوّد الإيميل مفعّل على السيرفر) =====
-  var vBusy = false;
-  function ensureVerified() {
-    var u = user(); if (!u.email || u.vf === u.email || vBusy || document.getElementById('arkOtp')) return;
-    vBusy = true;
-    (function wait() { if (g(CK)) { vBusy = false; showOtp(); } else setTimeout(wait, 1500); })();
-  }
-  function post(o) {
-    var u = user(); o.email = u.email; o.did = did; o.code = g(CK); o.name = u.name; o.phone = u.phone || '';
-    return fetch('/api/verify', { method: 'POST', headers: { 'content-type': 'text/plain' }, body: JSON.stringify(o) }).then(function (r) { return r.json().catch(function () { return {}; }); });
-  }
-  function showOtp() {
-    var u = user(); if (!u.email || u.vf === u.email || document.getElementById('arkOtp')) return;
-    if (!document.getElementById('arkOtpSt')) { var st = document.createElement('style'); st.id = 'arkOtpSt';
-      st.textContent = '#arkOtp{position:fixed;inset:0;z-index:2147483646;background:rgba(10,40,42,.92);display:flex;align-items:center;justify-content:center;padding:18px}#arkOtp form{background:#fff;border-radius:18px;max-width:380px;width:100%;padding:22px;direction:rtl;text-align:right}#arkOtp h3{margin:0 0 6px;color:#0B7C82}#arkOtp p{margin:0 0 12px;color:#4B6A6D;font-size:14px}#arkOtp input{width:100%;box-sizing:border-box;padding:12px;margin:0 0 10px;border:1.5px solid #cfe0e0;border-radius:10px;font-size:24px;letter-spacing:8px;text-align:center;user-select:text;-webkit-user-select:text}#arkOtp button{width:100%;padding:12px;border:0;border-radius:10px;background:#0B7C82;color:#fff;font-size:17px;font-weight:700;margin-bottom:8px}#arkOtp .l{display:flex;justify-content:space-between;font-size:13px}#arkOtp .l a{color:#0B7C82;cursor:pointer}#arkOtp .e{color:#b3261e;font-size:13px;min-height:18px}';
-      document.head.appendChild(st); }
-    var d = document.createElement('div'); d.id = 'arkOtp';
-    d.innerHTML = '<form><h3>كود التفعيل</h3><p>بعتنالك كود التفعيل على إيميلك <b dir="ltr" id="arkOM"></b><span id="arkOPw"> وفي رسالة SMS على جوالك <b dir="ltr" id="arkOP"></b></span>. اكتبه هنا عشان يفتح الكتاب.</p>' +
-      '<input id="arkOI" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="20" placeholder="XXXX-XXXX-XXXX" dir="ltr" style="font-size:20px;letter-spacing:3px">' +
-      '<div class="e" id="arkOE"></div><button type="submit">تفعيل</button><div class="l"><a id="arkOR">أعد الإرسال</a><a id="arkOC">تغيير البيانات</a></div></form>';
-    document.body.appendChild(d);
-    var E = document.getElementById('arkOE');
-    var em = String(u.email), at = em.indexOf('@'); document.getElementById('arkOM').textContent = at > 1 ? em[0] + '***' + em.slice(at - 1) : em;
-    var ph = String(u.phone || ''); if (ph) document.getElementById('arkOP').textContent = ph.length > 6 ? ph.slice(0, ph.charAt(0) === '+' ? 4 : 2) + '***' + ph.slice(-4) : ph; else document.getElementById('arkOPw').style.display = 'none';
-    var rBusy = false;
-    function resend(auto) {
-      if (rBusy) return; rBusy = true; if (!auto) { E.style.color = '#4B6A6D'; E.textContent = 'جاري الإرسال…'; }
-      post({ action: 'request' }).then(function (j) {
-        rBusy = false; if (auto && j.ok) return; E.style.color = j.ok ? '#0B7C82' : '';
-        E.textContent = j.ok ? (u.phone ? 'اتبعت الكود على إيميلك وجوالك ✅ (لو مش لاقيه شوف الـ Spam)' : 'اتبعت الكود على إيميلك ✅ (لو مش لاقيه شوف الـ Spam)') : j.error === 'cooldown' ? (auto ? '' : 'انتظر دقيقة' + (j.wait ? ' (' + j.wait + ' ثانية)' : '') + ' وجرّب تاني') : j.error === 'too_many' || j.error === 'rate_limited' ? 'محاولات كتير — جرّب بعد ساعة' : 'حصل خطأ في الإرسال، جرّب تاني';
-      }).catch(function () { rBusy = false; if (!auto) { E.style.color = ''; E.textContent = 'مفيش اتصال بالإنترنت'; } });
-    }
-    document.getElementById('arkOR').onclick = function () { resend(false); };
-    resend(true);
-    document.getElementById('arkOC').onclick = function () { var x = user(); delete x.email; delete x.vf; s(UK, JSON.stringify(x)); d.remove(); askName(); };
-    d.querySelector('form').addEventListener('submit', function (e) {
-      e.preventDefault(); var c = document.getElementById('arkOI').value.toUpperCase().replace(/[^A-Z0-9]/g, '');
-      if (c.length < 10) { E.textContent = 'اكتب الكود كامل زي ما وصلك على الإيميل أو الجوال'; return; }
-      E.style.color = '#4B6A6D'; E.textContent = 'جاري التحقق…';
-      post({ action: 'activate', act: c }).then(function (j) {
-        E.style.color = '';
-        if (j.ok) { var x = user(); x.vf = x.email; s(UK, JSON.stringify(x)); d.remove(); ev('activated'); flush(false); return; }
-        E.textContent = j.error === 'wrong' ? 'الكود غلط — راجع الإيميل أو الـ SMS أو اضغط أعد الإرسال' : j.error === 'locked' || j.error === 'rate_limited' ? 'محاولات كتير — جرّب بعد ربع ساعة' : 'حصل خطأ، جرّب تاني';
-      }).catch(function () { E.textContent = 'مفيش اتصال بالإنترنت'; });
-    });
-    setTimeout(function () { var i = document.getElementById('arkOI'); if (i) i.focus(); }, 50);
-  }
-
-  // ===== أحداث الاستخدام =====
   function secTitle() { var h = document.querySelector('#main .stitle'); return h ? h.textContent.trim() : ''; }
   function itemInfo(el) {
     var c = el && el.closest('.item, .tq'); if (!c) return { item: '', q: '' };
@@ -156,18 +127,20 @@
       setTimeout(function () { var b = document.querySelector('.tres .ring b'); if (b) ev('test_done', { sec: sec, pc: parseInt(b.textContent, 10) || 0 }); flush(false); }, 250);
     }
   }, true);
-  document.addEventListener('submit', function (e) {
-    if (!e.target || e.target.id !== 'lkF') return;
-    setTimeout(function () { if (document.getElementById('lk')) ev('unlock_fail'); }, 4000);
-  }, true);
 
   function init() {
-    askName(); ensureVerified();
+    var legacy = document.getElementById('lk'); if (legacy) legacy.remove();
+    askName();
     if (g('arkan-idle-locked')) { ev('idle_lock'); try { localStorage.removeItem('arkan-idle-locked'); } catch (x) {} }
-    ev('session');
-    var lk = document.getElementById('lk');
-    var watch = function () { if (!document.getElementById('lk')) { ev('unlock'); onRoute(); flush(false); return true; } };
-    if (!lk) watch(); else { var mo = new MutationObserver(function () { if (watch()) mo.disconnect(); }); mo.observe(document.body, { childList: true }); }
+    if (window.arkanPin && window.arkanPin.logged()) { ev('session'); onRoute(); flush(false); }
   }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+  function start() {
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+  }
+  if (!window.arkanPin) {
+    var ps = document.createElement('script');
+    ps.src = '/arkan-pin.js?v=194';
+    ps.onload = start;
+    (document.head || document.documentElement).appendChild(ps);
+  } else start();
 })();

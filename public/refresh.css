@@ -1,0 +1,86 @@
+/* أركان – طبقة التجديد البصري (فوق experience.css). احذف سطر الربط في index.html للرجوع للشكل السابق. */
+:root{--rf-r:16px;--rf-sh:0 1px 2px rgba(10,59,65,.06),0 14px 34px -22px rgba(10,59,65,.35)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--rf-sh:0 1px 2px rgba(0,0,0,.4),0 14px 34px -22px rgba(0,0,0,.8)}}
+:root[data-theme="dark"]{--rf-sh:0 1px 2px rgba(0,0,0,.4),0 14px 34px -22px rgba(0,0,0,.8)}
+
+/* الشريط العلوي: نترك ألوانه الأصلية، ونحسّن اللمس فقط */
+.bar .tbtn{transition:transform .2s,box-shadow .2s}
+.bar .tbtn:hover{transform:translateY(-1px)}
+
+/* الفهرس */
+#toc{background:var(--card);border-radius:var(--rf-r);box-shadow:var(--rf-sh)}
+.toc-part{cursor:pointer;user-select:none;justify-content:space-between;border-radius:12px;padding:12px 10px;margin-top:6px;font-size:15.5px;transition:background .15s}
+.toc-part:hover{background:var(--teal-soft)}
+.toc-part::before{display:none}
+.toc-part::after{content:"";flex:none;width:9px;height:9px;border-inline-end:2.5px solid var(--teal);border-bottom:2.5px solid var(--teal);transform:rotate(45deg) translateY(-2px);transition:transform .2s;opacity:.8}
+.toc-part.rf-closed::after{transform:rotate(-135deg) translateY(-2px)}
+.toc a.rf-col{display:none}
+.toc a{min-height:44px;gap:10px;padding:8px 10px}
+.toc a .t{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:14.5px;line-height:1.55}
+.toc .n{min-width:32px;height:32px;border-radius:10px;font-size:13px}
+.toc a.on{background:var(--teal);color:#fff;box-shadow:none}
+.toc a.on .n{background:var(--sun);color:var(--edge)}
+.toc a.on .st{background:rgba(255,255,255,.22);color:#fff}
+
+/* المحتوى: بطاقات أهدأ وعناوين أوضح */
+.shead{margin-bottom:18px}
+.badge{border:0;box-shadow:0 6px 16px -8px rgba(10,59,65,.5);transform:none;border-radius:18px;background:linear-gradient(145deg,var(--sun),#ffdf80)}
+h1.stitle{letter-spacing:.1px;line-height:1.5}
+.item,.rules,.textbox,.example,.how,.note{border-radius:var(--rf-r)}
+.item{box-shadow:var(--rf-sh);transition:box-shadow .2s,border-color .2s}
+.item:hover{border-color:color-mix(in srgb,var(--teal) 45%,var(--line))}
+.item.done{border-color:color-mix(in srgb,var(--ok) 55%,var(--line))}
+.opt{border-radius:14px;transition:transform .12s,border-color .15s,background .15s}
+.opt:hover{transform:translateY(-1px)}
+.reveal,.start{border-radius:14px}
+.sprog .fill,.sprog .track{border-radius:99px}
+textarea{border-radius:12px}
+.ux-tools{box-shadow:var(--rf-sh);border-radius:var(--rf-r)}
+::selection{background:color-mix(in srgb,var(--teal) 28%,transparent)}
+
+/* صفحة تقدّمي */
+.rf-modal{position:fixed;inset:0;z-index:2147483000;background:rgba(6,26,29,.62);backdrop-filter:blur(3px);display:flex;align-items:flex-end;justify-content:center;padding:0}
+.rf-modal[hidden]{display:none}
+.rf-card{background:var(--paper);color:var(--ink);width:100%;max-width:760px;max-height:92vh;overflow:auto;border-radius:22px 22px 0 0;padding:0 16px calc(28px + env(safe-area-inset-bottom,0px));box-shadow:0 -20px 60px -20px rgba(0,0,0,.5);direction:rtl;font-family:var(--ui)}
+@media (min-width:760px){.rf-modal{align-items:center;padding:24px}.rf-card{border-radius:22px;max-height:88vh}}
+.rf-head{position:sticky;top:0;z-index:1;background:var(--paper);display:flex;align-items:center;gap:10px;padding:14px 0 10px;border-bottom:1px solid var(--line)}
+.rf-head h2{flex:1;margin:0;font-size:21px;font-weight:800}
+.rf-head button{border:1px solid var(--line);background:var(--card);border-radius:12px;width:42px;height:42px;font-size:16px}
+.rf-hero{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin:16px 0;background:var(--card);border:1px solid var(--line);border-radius:var(--rf-r);padding:14px;box-shadow:var(--rf-sh)}
+.rf-ring{color:var(--ink);flex:none}
+.rf-kpis{flex:1;min-width:200px;display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.rf-kpis div{background:var(--paper);border-radius:12px;padding:8px 10px;text-align:center}
+.rf-kpis b{display:block;font-size:20px;line-height:1.3;color:var(--teal-deep)}.rf-kpis span{font-size:12px;color:var(--muted)}
+.rf-next{display:block;background:var(--teal);color:#fff;text-decoration:none;border-radius:14px;padding:13px 16px;font-weight:700;margin-bottom:10px}
+.rf-next b{font-weight:800}
+.rf-done{background:var(--ok-soft);color:var(--ok);border-radius:14px;padding:12px 16px;font-weight:700}
+.rf-weak{background:var(--coral-soft);color:var(--bad);border-radius:14px;padding:12px 16px;line-height:1.9;margin-bottom:6px}
+.rf-weak a{color:inherit;font-weight:800}
+.rf-ph{font-size:15.5px;margin:20px 2px 8px;color:var(--teal-deep);font-weight:800}
+.rf-list{background:var(--card);border:1px solid var(--line);border-radius:var(--rf-r);overflow:hidden}
+.rf-row{display:flex;align-items:center;gap:10px;padding:11px 12px;border-bottom:1px solid var(--line2);text-decoration:none;color:inherit;min-height:48px}
+.rf-row:last-child{border-bottom:0}.rf-row:hover{background:var(--teal-soft)}
+.rf-n{flex:none;min-width:32px;height:30px;padding:0 4px;display:grid;place-items:center;border-radius:9px;background:var(--teal-soft);color:var(--teal-deep);font-weight:800;font-size:13px}
+.rf-t{flex:1;min-width:0;font-size:14.5px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.rf-bar{flex:none;width:72px;height:8px;border-radius:99px;background:var(--line);overflow:hidden}
+.rf-bar i{display:block;height:100%;background:var(--teal);border-radius:99px}
+.rf-c{flex:none;min-width:44px;text-align:center;font-size:12px;font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums}
+.rf-c.full{color:var(--ok)}
+.rf-sc{flex:none;font-size:12px;font-weight:800;padding:2px 10px;border-radius:99px;background:var(--line2);color:var(--muted)}
+.rf-sc.hi{background:var(--ok-soft);color:var(--ok)}.rf-sc.low{background:var(--coral-soft);color:var(--bad)}
+
+/* الأبيات: كل شطر في سطر واحد كامل، ويصغر الخط تلقائيًا (refresh.js) بدل نزول كلمة لسطر ثانٍ */
+.poem,.poem .h{transition:none!important;animation:none}
+.poem{--pf:1;font-size:calc((var(--fs) + 1px) * var(--pf));max-width:100%;overflow:visible}
+html #main .poem{font-size:calc((var(--reading-size,var(--fs)) + 1px) * var(--pf))}
+.poem .h{white-space:nowrap;width:max-content;max-width:none;justify-self:center}
+.poem .h:nth-child(2n){justify-self:center}
+@media (max-width:620px){.poem{row-gap:0}.poem .h,.poem .h:nth-child(2n){justify-self:center;padding-inline-start:0;margin-bottom:0}.poem .h:nth-child(2n){margin-bottom:10px}}
+
+@media (max-width:760px){
+  .bar-in{padding-inline:12px}
+  .bar .tbtn .lbl{font-size:12.5px}
+  .item{border-radius:14px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+@media print{.rf-modal{display:none!important}}

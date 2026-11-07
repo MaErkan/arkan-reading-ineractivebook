@@ -1,6 +1,6 @@
 // Service worker – أركان التفاعلي
-const VERSION = 'arkan-v20261107-full-project';
-const CORE = ['./install.js', './arkan-protect.js', './arkan-track.js', './arkan-pin.js', './icons/favicon-v5.ico', './icons/maskable-v5-192.png', './experience.css?v=20261023', './experience.js?v=20261023', './refresh.css?v=20261107', './refresh.js?v=20261107', './', './home.html', './v2.html', './kitab.html', './tutor-ui.js', './teacher-review.js?v=1', './manifest.webmanifest',
+const VERSION = 'arkan-v20261107-v2-direct';
+const CORE = ['./install.js', './arkan-protect.js', './icons/favicon-v5.ico', './icons/maskable-v5-192.png', './experience.css?v=20261023', './experience.js?v=20261023', './refresh.css?v=20261107', './refresh.js?v=20261107', './', './v2.html', './book-data.json', './kitab.html', './tutor-ui.js', './teacher-review.js?v=1', './manifest.webmanifest',
   './icons/icon-v5-192.png', './icons/icon-v5-512.png', './icons/maskable-v5-512.png', './icons/apple-touch-icon-v5.png', './icons/favicon-v5-32.png', './img/logo-scene.jpg', './img/arch-light.jpg', './img/mosque-blue.jpg'];
 
 self.addEventListener('install', e => {
@@ -26,7 +26,7 @@ self.addEventListener('fetch', e => {
         const copy = res.clone();
         caches.open(VERSION).then(c => c.put(req, copy));
         return res;
-      }).catch(() => caches.match(req).then(hit => hit || caches.match('./home.html')))
+      }).catch(() => caches.match(req).then(hit => hit || caches.match('./v2.html')))
     );
     return;
   }

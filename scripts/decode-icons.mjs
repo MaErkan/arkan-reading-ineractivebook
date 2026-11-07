@@ -7,4 +7,5 @@ for (const f of readdirSync('icons-src').filter(f => f.endsWith('.b64'))) {
   console.log('icon:', f.slice(0, -4));
 }
 
+await import('./prepare-public-book.mjs');
 await import('./apply-home.mjs');

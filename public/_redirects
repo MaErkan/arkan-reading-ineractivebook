@@ -1,7 +1,11 @@
-/ /home.html 200!
+/ /v2.html 200!
+/home.html /v2.html 302!
+/branches.html /v2.html 302!
+/index.html /v2.html 302!
+/kitab.html /v2.html 302!
 /qawaid.html /coming.html 302!
 /writing.html /coming.html 302!
 /qadaya.html /coming.html 302!
 /hifz.html /coming.html 302!
 /tadribat.html /coming.html 302!
-/account.html /home.html 302!
+/account.html /v2.html 302!
